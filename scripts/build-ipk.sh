@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-	echo "usage: $0 /path/to/immortalwrt-24.10.6-x86_64-sdk" >&2
+	echo "usage: $0 /path/to/immortalwrt-sdk" >&2
 	exit 2
 fi
 
