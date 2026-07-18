@@ -51,8 +51,8 @@ LuCI の `_()` 翻訳 API を使用します。コアパッケージは全言語
 - 日本語には `luci-i18n-op-flow-ja` を追加します。
 
 言語パッケージとコアパッケージのバージョンは一致させてください。`r1`～`r5` は
-中国語文字列がハードコードされているため、`r6` の言語パッケージでは翻訳できません。
-英語または日本語 UI を使う場合はコアも `r6` へ更新してください。LuCI 全体を
+中国語文字列がハードコードされているため、`r6` 以降の言語パッケージでは翻訳できません。
+英語または日本語 UI を使う場合はコアも最新版へ更新してください。LuCI 全体を
 日本語表示にするには、通常 `luci-i18n-base-ja` という LuCI 基本日本語パッケージも
 必要です。
 
@@ -63,7 +63,7 @@ LuCI の `_()` 翻訳 API を使用します。コアパッケージは全言語
 未信頼パッケージを明示的に許可してインストールします。
 
 ```sh
-apk add --allow-untrusted ./op-flow-insight-0.1.1-r6.apk
+apk add --allow-untrusted ./op-flow-insight-0.1.1-r7.apk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```
@@ -72,10 +72,10 @@ LuCI で選択する言語に合わせて、任意の言語パッケージを 1 
 
 ```sh
 # 簡体字中国語
-apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r6.apk
+apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r7.apk
 
 # 日本語
-apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r6.apk
+apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r7.apk
 ```
 
 LuCI の **ステータス → Flow Insight** を開きます。初回インストール後は
@@ -97,10 +97,10 @@ logread -e op-flow
 ImmortalWrt 24.10.x は引き続き opkg/IPK を使用します。
 
 ```sh
-opkg install ./op-flow-insight_0.1.1-r6_x86_64.ipk
+opkg install ./op-flow-insight_0.1.1-r7_x86_64.ipk
 # 任意：簡体字中国語または日本語を選択
-opkg install ./luci-i18n-op-flow-ja_0.1.1-r6_all.ipk
-# opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r6_all.ipk
+opkg install ./luci-i18n-op-flow-ja_0.1.1-r7_all.ipk
+# opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r7_all.ipk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```

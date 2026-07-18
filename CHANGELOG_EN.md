@@ -9,6 +9,23 @@ are therefore published as historical binary archives. GitHub's automatically
 generated “Source code” archives do not represent those older versions.
 Starting with `r5`, release tags correspond to source commits.
 
+## 0.1.1-r7
+
+- Rebuilt the page with LuCI-native `cbi-map`, `cbi-section`, `cbi-tabmenu`,
+  and `table` structures so headings, tabs, sections, and rows match built-in
+  ImmortalWrt pages.
+- Replaced the separate dashboard-card treatment with a native traffic
+  overview section and table.
+- Let the active LuCI theme control surfaces, borders, row colors, and dark
+  mode for consistent Argon and cross-theme rendering.
+- Preserved blue download, green upload, risk badges, the trend chart, and
+  host-click navigation to current connections.
+- Kept table headers and data aligned during PC zoom and on narrow screens
+  through fixed column layouts and contained horizontal scrolling.
+- Preserved the active native tab across the two-second live refresh.
+- Passed browser regressions at 2560, 1920, 1280, 768 dark, and 480 dark
+  viewport widths.
+
 ## 0.1.1-r6
 
 - Switched the LuCI source and fallback UI to English and adopted LuCI's `_()`

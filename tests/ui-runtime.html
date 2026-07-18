@@ -5,12 +5,22 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>OP Flow Insight runtime regression</title>
 	<style>
-		:root { font-family: Arial, sans-serif; color: #172033; }
+		:root {
+			--primary: #5e72e4;
+			--background: #f4f5f7;
+			--surface: #fff;
+			--surface-alt: #f4f6f9;
+			--text: #32325d;
+			--muted: #8898aa;
+			--line: #dee2e6;
+			font-family: Arial, sans-serif;
+			color: var(--text);
+		}
 		* { box-sizing: border-box; }
-		body { margin: 0; background: #f2f4f8; }
+		body { margin: 0; background: var(--background); color: var(--text); }
 		.test-topbar {
 			align-items: flex-start;
-			background: #5e72e4;
+			background: var(--primary);
 			display: flex;
 			height: 90px;
 			justify-content: flex-end;
@@ -22,8 +32,8 @@
 		}
 		.test-shell { min-height: 100vh; padding-left: 240px; }
 		.test-sidebar {
-			background: #fff;
-			border-right: 1px solid #d9dee8;
+			background: var(--surface);
+			border-right: 1px solid var(--line);
 			bottom: 0;
 			left: 0;
 			padding: 2rem 1rem;
@@ -31,32 +41,83 @@
 			top: 0;
 			width: 240px;
 		}
-		.test-main { padding: 1.25rem; width: 100%; }
-		/* Deliberately imitate conflicting rules found across LuCI themes. */
-		h2, h3 {
-			background: #5e72e4;
-			height: 72px;
-			margin: -28px 0 18px;
-			padding: 28px 36px;
-			position: relative;
-			width: calc(100% + 72px);
+		.test-main { padding: 58px 1.25rem 1.25rem; width: 100%; }
+		h2 {
+			background: var(--surface);
+			border-radius: .25rem;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, .03);
+			color: var(--text);
+			font-size: 1.25rem;
+			margin: 0;
+			padding: 1rem 1.25rem;
 		}
+		h3 {
+			background: var(--surface);
+			border-radius: .25rem;
+			color: var(--text);
+			font-size: 1.1rem;
+			margin: 0;
+			padding: .875rem 1.25rem;
+		}
+		.cbi-section {
+			background: var(--surface);
+			border-radius: .25rem;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, .03);
+		}
+		.cbi-tabmenu {
+			display: flex;
+			gap: .35rem;
+			margin: 0 1.25rem;
+			padding: 0;
+		}
+		.cbi-tabmenu li {
+			background: var(--surface-alt);
+			border-radius: .25rem .25rem 0 0;
+			list-style: none;
+		}
+		.cbi-tabmenu li a {
+			color: var(--text);
+			display: block;
+			padding: .65rem .9rem;
+			text-decoration: none;
+		}
+		.cbi-tabmenu li.cbi-tab {
+			background: var(--surface);
+			box-shadow: inset 0 -3px 0 var(--primary);
+		}
+		.table { display: table; width: 100%; }
+		.tr { display: table-row; }
+		.th, .td {
+			border-bottom: 1px solid var(--line);
+			display: table-cell;
+			padding: .75rem;
+			text-align: center;
+		}
+		.th { background: var(--surface-alt); }
+		.alert-message {
+			background: var(--surface-alt);
+			border-left: 3px solid var(--muted);
+			color: var(--text);
+			padding: .8rem 1rem;
+		}
+		/* Deliberately imitate a few conflicting rules found across LuCI themes. */
 		section { float: left; width: 48%; }
 		svg, path { display: none; opacity: 0; stroke: transparent; }
-		table { background: white; display: block !important; width: auto !important; }
-		table th { background: #eef2f8; padding: 1.5rem 2rem; }
-		table td { color: #101828 !important; padding: 1.25rem 2rem; }
-		div > table > tbody > tr:nth-of-type(2n) { background: #fff !important; }
 		.table { display: flex !important; flex-direction: column; }
 		.cbi-map { margin-left: -2rem; position: absolute; width: 140%; }
-		body.test-dark { background: #1e1e1e; color: #ccc; }
-		body.test-dark .test-sidebar { background: #252526; border-color: #444; }
-		body.test-dark .test-main { background: #1e1e1e; }
-		@media (max-width: 760px) {
+		body.test-dark {
+			--background: #1e1e1e;
+			--surface: #2b3037;
+			--surface-alt: #333941;
+			--text: #e3e7ed;
+			--muted: #aeb7c2;
+			--line: #454c55;
+		}
+		@media (max-width: 768px) {
 			.test-shell { padding-left: 0; }
 			.test-sidebar { display: none; }
 			.test-topbar { left: 0; }
-			.test-main { padding: .75rem; }
+			.test-main { padding: 58px .75rem .75rem; }
 		}
 	</style>
 	<link rel="stylesheet" href="../openwrt/rootfs/www/luci-static/resources/op-flow.css">
@@ -140,7 +201,46 @@
 			createHandlerFn: function(context, handler) {
 				return function(event) { return handler.call(context, event); };
 			},
-			addNotification: function() {}
+			addNotification: function() {},
+			tabs: {
+				initTabGroup: function(panes) {
+					panes = Array.from(panes || []);
+					if (!panes.length) return;
+					var group = panes[0].parentNode;
+					var menu = E('ul', { 'class': 'cbi-tabmenu' });
+					var activate = function(index) {
+						panes.forEach(function(pane, paneIndex) {
+							var active = paneIndex === index;
+							pane.setAttribute('data-tab-active', active ? 'true' : 'false');
+							pane.style.display = active ? '' : 'none';
+							var item = menu.childNodes[paneIndex];
+							item.className = active ? 'cbi-tab' : 'cbi-tab-disabled';
+						});
+						panes[index].dispatchEvent(new CustomEvent('cbi-tab-active', {
+							detail: { tab: panes[index].getAttribute('data-tab') }
+						}));
+					};
+					panes.forEach(function(pane, index) {
+						var link = E('a', {
+							'href': '#',
+							'click': function(event) {
+								event.preventDefault();
+								activate(index);
+							}
+						}, pane.getAttribute('data-tab-title'));
+						menu.appendChild(E('li', {
+							'class': pane.getAttribute('data-tab-active') === 'true' ?
+								'cbi-tab' : 'cbi-tab-disabled',
+							'data-tab': pane.getAttribute('data-tab')
+						}, link));
+					});
+					group.parentNode.insertBefore(menu, group);
+					var selected = panes.findIndex(function(pane) {
+						return pane.getAttribute('data-tab-active') === 'true';
+					});
+					activate(selected >= 0 ? selected : 0);
+				}
+			}
 		};
 		var view = { extend: function(definition) { return definition; } };
 		function _(message) { return message; }
@@ -178,36 +278,38 @@
 			var root = rect('.ofi-root');
 			var main = rect('.test-main');
 			var topbar = rect('.test-topbar');
-			var header = rect('.ofi-header');
-			var title = rect('.ofi-header h2');
-			var actions = rect('.ofi-actions');
-			var stats = rect('.ofi-stats');
-			var panels = Array.from(document.querySelectorAll('.ofi-panel')).map(function(item) {
-				return item.getBoundingClientRect();
+			var titleElement = document.querySelector('.ofi-root > h2');
+			var title = titleElement.getBoundingClientRect();
+			var lead = rect('.ofi-lead');
+			var toolbar = rect('.ofi-toolbar');
+			var summary = rect('.ofi-summary-section');
+			var activePanels = Array.from(document.querySelectorAll('.ofi-panel')).filter(function(item) {
+				return getComputedStyle(item).display !== 'none';
 			});
-			var cards = Array.from(document.querySelectorAll('.ofi-stat')).map(function(item) {
-				return item.getBoundingClientRect();
-			});
-			var columns = new Set(cards.map(function(item) { return Math.round(item.left); })).size;
-			var expectedColumns = root.width <= 360 ? 1 : root.width <= 650 ? 2 : root.width <= 1050 ? 3 : 6;
 			var svg = document.querySelector('.ofi-chart');
 			var paths = Array.from(document.querySelectorAll('.ofi-chart path'));
-			var tabs = Array.from(document.querySelectorAll('.ofi-tab'));
+			var tabs = Array.from(document.querySelectorAll('.cbi-tabmenu li'));
 			var yLabels = Array.from(document.querySelectorAll('.ofi-y-scale span'));
 			var xLabels = Array.from(document.querySelectorAll('.ofi-x-scale span'));
 			var expectedDown = document.body.classList.contains('test-dark') ? 'rgb(100,164,255)' : 'rgb(22,119,255)';
 			var expectedUp = document.body.classList.contains('test-dark') ? 'rgb(69,211,160)' : 'rgb(0,168,120)';
+			var expectedSurface = document.body.classList.contains('test-dark') ?
+				'rgb(43,48,55)' : 'rgb(255,255,255)';
 
 			add('root stays in content', inside(root, main, 2));
-			add('plugin header clears theme topbar', header.top >= topbar.bottom + 10, header.top + '/' + topbar.bottom);
-			add('title stays in plugin header', inside(title, header, 2));
-			add('actions stay in plugin header', inside(actions, header, 2));
-			add('header precedes stats', header.bottom <= stats.top + 1);
-			add('responsive stat columns', columns === expectedColumns, columns + '/' + expectedColumns);
-			add('panels use full row', panels.every(function(panel) { return Math.abs(panel.width - root.width) <= 2; }));
-			add('panels are vertically ordered', panels.every(function(panel, index) {
-				return index === 0 || panels[index - 1].bottom <= panel.top + 1;
-			}));
+			add('native title sits in the LuCI header area',
+				title.top >= main.top && title.top < topbar.bottom &&
+				title.left >= root.left && title.right <= root.right + 2);
+			add('native title inherits theme surface',
+				getComputedStyle(titleElement).backgroundColor.replace(/\s+/g, '') === expectedSurface);
+			add('description and toolbar follow title',
+				title.bottom <= lead.top + 1 && lead.bottom <= toolbar.top + 1);
+			add('toolbar stays in content', inside(toolbar, root, 2));
+			add('summary follows toolbar', toolbar.bottom <= summary.top + 1);
+			add('only one native tab panel is visible', activePanels.length === 1);
+			add('active panel uses full row',
+				activePanels.length === 1 &&
+				Math.abs(activePanels[0].getBoundingClientRect().width - root.width) <= 2);
 			add('SVG uses correct namespace', svg instanceof SVGSVGElement &&
 				paths.length === 3 && paths.every(function(path) { return path instanceof SVGPathElement; }));
 			add('SVG paths have geometry', paths.slice(1).every(function(path) { return path.getTotalLength() > 0; }));
@@ -220,14 +322,20 @@
 				document.querySelector('.ofi-axis-title-x').textContent === 'Time' &&
 				yLabels.length === 3 && yLabels.every(function(item) { return /\/s$/.test(item.textContent); }) &&
 				xLabels.length === 3 && xLabels.every(function(item) { return /\d{2}:\d{2}/.test(item.textContent); }));
-			add('Bandix-style tabs are contained', tabs.length === 3 &&
-				tabs.every(function(tab) { return inside(tab.getBoundingClientRect(), rect('.ofi-tabs'), 2); }));
-			add('download stat stays blue',
-				rgb(document.querySelector('.ofi-stat-down .ofi-stat-value')).toLowerCase() === expectedDown);
-			add('upload stat stays green',
-				rgb(document.querySelector('.ofi-stat-up .ofi-stat-value')).toLowerCase() === expectedUp);
+			add('LuCI native tabs are contained', tabs.length === 3 &&
+				tabs.every(function(tab) {
+					return inside(tab.getBoundingClientRect(), rect('.cbi-tabmenu'), 2);
+				}));
+			add('LuCI native component classes are used',
+				document.querySelectorAll('.cbi-section').length === 4 &&
+				Boolean(document.querySelector('.ofi-table.table .tr .th')) &&
+				Boolean(document.querySelector('.ofi-table.table .tr .td')));
+			add('download summary stays blue',
+				rgb(document.querySelector('.ofi-summary-table td.ofi-down')).toLowerCase() === expectedDown);
+			add('upload summary stays green',
+				rgb(document.querySelector('.ofi-summary-table td.ofi-up')).toLowerCase() === expectedUp);
 
-			tabs[1].click();
+			tabs[1].querySelector('a').click();
 			var hostRows = Array.from(document.querySelectorAll('.ofi-host-row'));
 			var hostIPs = hostRows.map(function(row) { return row.dataset.host; });
 			add('hosts use stable numeric IP order',
@@ -240,12 +348,15 @@
 			var hostCells = Array.from(document.querySelectorAll('.ofi-host-table tbody tr:first-child td'));
 			var hostAlignment = hostHeaders.slice(1).map(function(header, index) {
 				var cell = hostCells[index + 1];
+				var headerRect = textRect(header);
+				var cellRect = textRect(cell);
 				return {
-					header: Math.round(textRect(header).right * 10) / 10,
-					cell: Math.round(textRect(cell).right * 10) / 10,
-					pass: getComputedStyle(header).textAlign === 'right' &&
-					getComputedStyle(cell).textAlign === 'right' &&
-					Math.abs(textRect(header).right - textRect(cell).right) <= 3
+					header: Math.round((headerRect.left + headerRect.right) * 5) / 10,
+					cell: Math.round((cellRect.left + cellRect.right) * 5) / 10,
+					pass: getComputedStyle(header).textAlign === 'center' &&
+					getComputedStyle(cell).textAlign === 'center' &&
+					Math.abs((headerRect.left + headerRect.right) -
+						(cellRect.left + cellRect.right)) <= 8
 				};
 			});
 			add('host numeric headers align with data',
@@ -272,17 +383,18 @@
 				window.testModule.renderData(updated);
 				var panel = document.querySelector('[data-ofi-panel="connections"]');
 				return Boolean(panel) && /10\.64\.0\.5/.test(panel.textContent) &&
-					document.querySelector('.ofi-tab-active').textContent.indexOf('Current connections') >= 0;
+					document.querySelector('.cbi-tabmenu li.cbi-tab').textContent
+						.indexOf('Current connections') >= 0;
 			})());
 
-			tabs = Array.from(document.querySelectorAll('.ofi-tab'));
-			tabs[1].click();
+			tabs = Array.from(document.querySelectorAll('.cbi-tabmenu li'));
+			tabs[1].querySelector('a').click();
 			hostRows = Array.from(document.querySelectorAll('.ofi-host-row'));
 			add('IP order does not change with traffic',
 				hostRows.map(function(row) { return row.dataset.host; }).join(',') ===
-				'10.64.0.5,10.64.0.64,10.64.0.68');
-			tabs = Array.from(document.querySelectorAll('.ofi-tab'));
-			tabs[0].click();
+					'10.64.0.5,10.64.0.64,10.64.0.68');
+			tabs = Array.from(document.querySelectorAll('.cbi-tabmenu li'));
+			tabs[0].querySelector('a').click();
 			add('document has no page overflow', document.documentElement.scrollWidth <= document.documentElement.clientWidth + 2,
 				document.documentElement.scrollWidth + '/' + document.documentElement.clientWidth);
 

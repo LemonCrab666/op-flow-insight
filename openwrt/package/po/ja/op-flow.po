@@ -188,8 +188,11 @@ msgstr "アクティブホスト / 接続"
 msgid "Current highest risk"
 msgstr "現在の最高リスク"
 
-msgid "Flow Insight sections"
-msgstr "トラフィック分析セクション"
+msgid "Traffic overview"
+msgstr "トラフィック概要"
+
+msgid "Select a LAN host to view its current connections."
+msgstr "現在の接続を表示するLANホストを選択してください。"
 
 msgid "Live trend"
 msgstr "リアルタイム推移"

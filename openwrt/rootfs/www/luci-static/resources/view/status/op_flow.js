@@ -23,11 +23,9 @@ function ensureStyles() {
 		critical.id = 'op-flow-insight-critical-style';
 		critical.textContent =
 			'.ofi-root{clear:both!important;display:block!important;float:none!important;' +
-				'margin:0!important;max-width:100%!important;min-width:0!important;' +
+				'max-width:100%!important;min-width:0!important;width:100%!important}' +
+			'.ofi-root .ofi-panel{float:none!important;max-width:100%!important;' +
 				'position:relative!important;width:100%!important}' +
-			'.ofi-root>.ofi-header,.ofi-root>.ofi-stats,.ofi-root>.ofi-workspace,' +
-			'.ofi-root>.ofi-footnote,.ofi-root .ofi-panel{float:none!important;' +
-				'max-width:100%!important;position:relative!important;width:100%!important}' +
 			'.ofi-root .ofi-table-scroll{display:block!important;max-width:100%!important;' +
 				'overflow-x:auto!important;width:100%!important}';
 		document.head.appendChild(critical);
@@ -39,7 +37,7 @@ function ensureStyles() {
 		stylesheet.id = 'op-flow-insight-stylesheet';
 		stylesheet.rel = 'stylesheet';
 		stylesheet.type = 'text/css';
-		stylesheet.href = L.resource('op-flow.css') + '?v=0.1.1-r6';
+		stylesheet.href = L.resource('op-flow.css') + '?v=0.1.1-r7';
 		document.head.appendChild(stylesheet);
 	}
 	return stylesheet;
@@ -105,13 +103,6 @@ function country(value) {
 		}
 	} catch (e) {}
 	return code;
-}
-
-function stat(label, value, accent) {
-	return E('div', { 'class': 'ofi-stat' + (accent ? ' ofi-stat-' + accent : '') }, [
-		E('div', { 'class': 'ofi-stat-label' }, label),
-		E('div', { 'class': 'ofi-stat-value' }, value)
-	]);
 }
 
 function svgNode(name, attributes, children) {
@@ -265,7 +256,8 @@ function hostLabel(host) {
 
 function hostRows(hosts, selectedHostIP, onSelect) {
 	if (!hosts || !hosts.length) {
-		return [ E('tr', {}, [ E('td', { 'colspan': 7, 'class': 'ofi-empty' },
+		return [ E('tr', { 'class': 'tr' }, [
+			E('td', { 'colspan': 7, 'class': 'td ofi-empty' },
 			_('No LAN host connections have been observed yet')) ]) ];
 	}
 	return hosts.map(function(host) {
@@ -279,7 +271,8 @@ function hostRows(hosts, selectedHostIP, onSelect) {
 			onSelect(host);
 		};
 		return E('tr', {
-			'class': 'ofi-host-row' + (host.ip === selectedHostIP ? ' ofi-host-selected' : ''),
+			'class': 'tr ofi-host-row' +
+				(host.ip === selectedHostIP ? ' ofi-host-selected' : ''),
 			'data-host': host.ip,
 			'tabindex': '0',
 			'role': 'button',
@@ -289,25 +282,25 @@ function hostRows(hosts, selectedHostIP, onSelect) {
 			'click': activate,
 			'keydown': activate
 		}, [
-			E('td', {}, [
+			E('td', { 'class': 'td' }, [
 				E('strong', {}, text(host.hostname, _('Unnamed host'))),
 				E('div', { 'class': 'ofi-mono ofi-subtle' }, host.ip),
 				host.mac ? E('div', { 'class': 'ofi-mono ofi-subtle' }, host.mac) : ''
 			]),
-			E('td', { 'class': 'ofi-num ofi-down' }, rate(host.download_bps)),
-			E('td', { 'class': 'ofi-num ofi-up' }, rate(host.upload_bps)),
-			E('td', { 'class': 'ofi-num' }, bytes(host.downloaded)),
-			E('td', { 'class': 'ofi-num' }, bytes(host.uploaded)),
-			E('td', { 'class': 'ofi-num' }, String(host.active_flows || 0)),
-			E('td', { 'class': 'ofi-num' }, riskBadge({ score: host.max_risk || 0 }))
+			E('td', { 'class': 'td ofi-num ofi-down' }, rate(host.download_bps)),
+			E('td', { 'class': 'td ofi-num ofi-up' }, rate(host.upload_bps)),
+			E('td', { 'class': 'td ofi-num' }, bytes(host.downloaded)),
+			E('td', { 'class': 'td ofi-num' }, bytes(host.uploaded)),
+			E('td', { 'class': 'td ofi-num' }, String(host.active_flows || 0)),
+			E('td', { 'class': 'td ofi-num' }, riskBadge({ score: host.max_risk || 0 }))
 		]);
 	});
 }
 
 function flowRows(flows, emptyMessage) {
 	if (!flows || !flows.length) {
-		return [ E('tr', {}, [
-			E('td', { 'colspan': 8, 'class': 'ofi-empty' },
+		return [ E('tr', { 'class': 'tr' }, [
+			E('td', { 'colspan': 8, 'class': 'td ofi-empty' },
 				emptyMessage || _('There are no active connections to display'))
 		]) ];
 	}
@@ -315,48 +308,36 @@ function flowRows(flows, emptyMessage) {
 		var geo = flow.geo || {};
 		var place = country(geo.country_code);
 		var asn = geo.asn ? 'AS' + geo.asn + ' · ' + text(geo.asn_org) : text(geo.asn_org);
-		return E('tr', { 'data-host': flow.host_ip || '' }, [
-			E('td', {}, [
+		return E('tr', { 'class': 'tr', 'data-host': flow.host_ip || '' }, [
+			E('td', { 'class': 'td' }, [
 				E('span', { 'class': 'ofi-direction ofi-direction-' + flow.direction },
 					flow.direction === 'inbound' ? _('Inbound') : _('Outbound')),
 				E('span', { 'class': 'ofi-proto' }, text(flow.protocol).toUpperCase())
 			]),
-			E('td', { 'class': 'ofi-mono' }, endpoint(flow.source)),
-			E('td', { 'class': 'ofi-arrow' }, '→'),
-			E('td', { 'class': 'ofi-mono' }, endpoint(flow.destination)),
-			E('td', {}, [
+			E('td', { 'class': 'td ofi-mono' }, endpoint(flow.source)),
+			E('td', { 'class': 'td ofi-arrow' }, '→'),
+			E('td', { 'class': 'td ofi-mono' }, endpoint(flow.destination)),
+			E('td', { 'class': 'td' }, [
 				E('div', {}, place),
 				E('div', { 'class': 'ofi-subtle', 'title': asn }, asn)
 			]),
-			E('td', { 'class': 'ofi-num ofi-down' }, rate(flow.download_bps)),
-			E('td', { 'class': 'ofi-num ofi-up' }, rate(flow.upload_bps)),
-			E('td', { 'class': 'ofi-num' }, riskBadge(flow.risk))
+			E('td', { 'class': 'td ofi-num ofi-down' }, rate(flow.download_bps)),
+			E('td', { 'class': 'td ofi-num ofi-up' }, rate(flow.upload_bps)),
+			E('td', { 'class': 'td ofi-num' }, riskBadge(flow.risk))
 		]);
 	});
 }
 
 function table(head, body, className) {
 	return E('div', { 'class': 'ofi-table-scroll' }, [
-		E('table', { 'class': 'ofi-table ' + (className || '') }, [
-			E('thead', {}, [ E('tr', {}, head.map(function(item) { return E('th', {}, item); })) ]),
+		E('table', { 'class': 'table ofi-table ' + (className || '') }, [
+			E('thead', { 'class': 'thead' }, [
+				E('tr', { 'class': 'tr table-titles' },
+					head.map(function(item) { return E('th', { 'class': 'th' }, item); }))
+			]),
 			E('tbody', {}, body)
 		])
 	]);
-}
-
-function tabButton(name, label, active, disabled, onSelect) {
-	return E('button', {
-		'type': 'button',
-		'class': 'ofi-tab' + (active ? ' ofi-tab-active' : ''),
-		'role': 'tab',
-		'aria-selected': active ? 'true' : 'false',
-		'aria-disabled': disabled ? 'true' : 'false',
-		'disabled': disabled ? '' : null,
-		'click': function(event) {
-			event.preventDefault();
-			if (!disabled) onSelect(name);
-		}
-	}, label);
 }
 
 function darkThemeActive() {
@@ -382,40 +363,6 @@ function darkThemeActive() {
 	return window.matchMedia &&
 		window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
-
-function syncThemeLayout(root) {
-	if (!root || !root.isConnected) return;
-	var rootRect = root.getBoundingClientRect();
-	var offset = 0;
-	var candidates = document.querySelectorAll(
-		'header, #header, .header, .navbar, .topbar, .top-bar, .app-header'
-	);
-
-	Array.prototype.forEach.call(candidates, function(element) {
-		if (element === root || root.contains(element)) return;
-		var style = window.getComputedStyle(element);
-		if (style.display === 'none' || style.visibility === 'hidden') return;
-		var rect = element.getBoundingClientRect();
-		var horizontalOverlap = Math.min(rootRect.right, rect.right) -
-			Math.max(rootRect.left, rect.left);
-		if (rect.height < 24 || rect.bottom > Math.min(window.innerHeight * .4, 240)) return;
-		if (rect.top > rootRect.top + 2 || rect.bottom <= rootRect.top + 1) return;
-		if (horizontalOverlap < Math.min(48, rootRect.width * .1)) return;
-		offset = Math.max(offset, Math.ceil(rect.bottom - rootRect.top + 12));
-	});
-
-	root.style.setProperty('--ofi-top-offset', offset + 'px');
-}
-
-function scheduleThemeLayout(root) {
-	if (!root) return;
-	if (root._ofiLayoutFrame) window.cancelAnimationFrame(root._ofiLayoutFrame);
-	root._ofiLayoutFrame = window.requestAnimationFrame(function() {
-		root._ofiLayoutFrame = null;
-		syncThemeLayout(root);
-	});
-}
-
 return view.extend({
 	load: function() {
 		return callDashboard().catch(function(err) {
@@ -424,21 +371,10 @@ return view.extend({
 	},
 
 	render: function(data) {
-		var stylesheet = ensureStyles();
+		ensureStyles();
 		this.root = E('div', {
-			'class': 'ofi-root' + (darkThemeActive() ? ' ofi-dark' : '')
+			'class': 'cbi-map ofi-root' + (darkThemeActive() ? ' ofi-dark' : '')
 		});
-		if (!stylesheet.sheet) {
-			stylesheet.addEventListener('load', L.bind(function() {
-				scheduleThemeLayout(this.root);
-			}, this), { once: true });
-		}
-		if (!this._ofiResizeHandler) {
-			this._ofiResizeHandler = L.bind(function() {
-				scheduleThemeLayout(this.root);
-			}, this);
-			window.addEventListener('resize', this._ofiResizeHandler);
-		}
 		this.activeTab = this.activeTab || 'trend';
 		this.selectedHostIP = this.selectedHostIP || '';
 		this.renderData(data);
@@ -452,7 +388,6 @@ return view.extend({
 		if (!this.root) return;
 		this.lastData = data;
 		this.root.classList.toggle('ofi-dark', darkThemeActive());
-		scheduleThemeLayout(this.root);
 		if (!data || data.error) {
 			dom.content(this.root, [
 				E('h2', {}, _('Flow Insight')),
@@ -481,10 +416,6 @@ return view.extend({
 			return flow.host_ip === selectedHost.ip;
 		}) : [];
 		var self = this;
-		var selectTab = function(name) {
-			self.activeTab = name;
-			self.renderData(self.lastData);
-		};
 		var selectHost = function(host) {
 			self.selectedHostIP = host.ip;
 			self.activeTab = 'connections';
@@ -501,72 +432,53 @@ return view.extend({
 		var updated = dataStatus.updated_at
 			? new Date(dataStatus.updated_at).toLocaleString()
 			: _('Never updated');
-		var content = [
-			E('div', { 'class': 'ofi-header' }, [
-				E('div', {}, [
-					E('h2', {}, _('Flow Insight')),
-					E('p', { 'class': 'ofi-lead' },
-						_('Cumulative LAN-host usage, live connections, and offline IP risk evidence'))
-				]),
-				E('div', { 'class': 'ofi-actions' }, [
-					E('span', { 'class': 'ofi-live' }, [
-						E('span', { 'class': 'ofi-live-dot' }), _('Refreshes every 2 seconds')
-					]),
-					E('button', {
-						'class': 'btn cbi-button-action',
-						'disabled': dataStatus.update_running ? '' : null,
-						'click': ui.createHandlerFn(this, function() {
-							return callUpdate().then(function() {
-								ui.addNotification(null, E('p', {},
-									_('Dataset update started in the background.')));
-							});
-						})
-					}, dataStatus.update_running ? _('Updating…') : _('Update datasets'))
-				])
-			])
-		].concat(warnings);
-		var activePanel;
-		if (this.activeTab === 'hosts') {
-			activePanel = E('section', {
-				'class': 'ofi-panel ofi-tab-panel',
-				'role': 'tabpanel',
-				'data-ofi-panel': 'hosts'
-			}, [
-				E('div', { 'class': 'ofi-panel-title' }, [
-					E('div', {}, [
-						E('h3', {}, _('LAN hosts')),
-						E('div', { 'class': 'ofi-panel-hint' },
-							_('Sorted by IP address; click a row to view the host\'s current connections'))
-					]),
-					E('span', { 'class': 'ofi-subtle' },
-						String(hosts.length) + ' ' + _('hosts recorded'))
-				]),
-				table(
-					[
-						_('Host'), _('Live download'), _('Live upload'),
-						_('Downloaded'), _('Uploaded'), _('Connections'), _('Risk')
-					],
-					hostRows(hosts, this.selectedHostIP, selectHost),
-					'ofi-host-table'
-				)
-			]);
-		} else if (this.activeTab === 'connections' && selectedHost) {
-			activePanel = E('section', {
-				'class': 'ofi-panel ofi-tab-panel',
-				'role': 'tabpanel',
-				'tabindex': '-1',
-				'data-ofi-panel': 'connections'
-			}, [
-				E('div', { 'class': 'ofi-panel-title' }, [
-					E('div', {}, [
-						E('h3', {}, _('Current connections') + ' · ' +
-							text(selectedHost.hostname, _('Unnamed host'))),
-						E('div', { 'class': 'ofi-panel-hint ofi-mono' },
-							selectedHost.ip + (selectedHost.mac ? ' · ' + selectedHost.mac : ''))
-					]),
-					E('span', { 'class': 'ofi-subtle' },
+		var trendPanel = E('section', {
+			'class': 'cbi-section ofi-panel',
+			'data-tab': 'trend',
+			'data-tab-title': _('Live trend'),
+			'data-tab-active': this.activeTab === 'trend' ? 'true' : null,
+			'data-ofi-panel': 'trend'
+		}, [
+			E('h3', { 'class': 'ofi-panel-heading' }, [
+				E('span', {}, _('Live bandwidth trend')),
+				E('small', { 'class': 'ofi-subtle' }, _('About the last 10 minutes'))
+			]),
+			sparkline(data.history)
+		]);
+		var hostsPanel = E('section', {
+			'class': 'cbi-section ofi-panel',
+			'data-tab': 'hosts',
+			'data-tab-title': _('LAN hosts'),
+			'data-tab-active': this.activeTab === 'hosts' ? 'true' : null,
+			'data-ofi-panel': 'hosts'
+		}, [
+			E('h3', { 'class': 'ofi-panel-heading' }, [
+				E('span', {}, _('LAN hosts')),
+				E('small', { 'class': 'ofi-subtle' },
+					String(hosts.length) + ' ' + _('hosts recorded'))
+			]),
+			E('div', { 'class': 'cbi-section-descr ofi-panel-hint' },
+				_('Sorted by IP address; click a row to view the host\'s current connections')),
+			table(
+				[
+					_('Host'), _('Live download'), _('Live upload'),
+					_('Downloaded'), _('Uploaded'), _('Connections'), _('Risk')
+				],
+				hostRows(hosts, this.selectedHostIP, selectHost),
+				'ofi-host-table'
+			)
+		]);
+		var connectionsContent;
+		if (selectedHost) {
+			connectionsContent = [
+				E('h3', { 'class': 'ofi-panel-heading' }, [
+					E('span', {}, _('Current connections') + ' · ' +
+						text(selectedHost.hostname, _('Unnamed host'))),
+					E('small', { 'class': 'ofi-subtle' },
 						String(selectedFlows.length) + ' ' + _('active connections'))
 				]),
+				E('div', { 'class': 'cbi-section-descr ofi-panel-hint ofi-mono' },
+					selectedHost.ip + (selectedHost.mac ? ' · ' + selectedHost.mac : '')),
 				E('div', { 'class': 'ofi-detail-summary' }, [
 					E('span', {}, [ _('Live download') + ' ',
 						E('strong', { 'class': 'ofi-down' }, rate(selectedHost.download_bps)) ]),
@@ -583,51 +495,82 @@ return view.extend({
 					flowRows(selectedFlows, _('This host has no active connections')),
 					'ofi-flow-table'
 				)
-			]);
+			];
 		} else {
-			this.activeTab = 'trend';
-			activePanel = E('section', {
-				'class': 'ofi-panel ofi-tab-panel',
-				'role': 'tabpanel',
-				'data-ofi-panel': 'trend'
-			}, [
-				E('div', { 'class': 'ofi-panel-title' }, [
-					E('h3', {}, _('Live bandwidth trend')),
-					E('span', { 'class': 'ofi-subtle' }, _('About the last 10 minutes'))
-				]),
-				sparkline(data.history)
-			]);
+			connectionsContent = [
+				E('h3', {}, _('Current connections')),
+				E('div', { 'class': 'cbi-section-descr ofi-connection-placeholder' },
+					_('Select a LAN host to view its current connections.'))
+			];
 		}
-		content.push(
-			E('div', { 'class': 'ofi-stats' }, [
-				stat(_('Current download'), rate(totals.download_bps), 'down'),
-				stat(_('Current upload'), rate(totals.upload_bps), 'up'),
-				stat(_('Total downloaded'), bytes(totals.downloaded)),
-				stat(_('Total uploaded'), bytes(totals.uploaded)),
-				stat(_('Active hosts / connections'),
-					(totals.active_hosts || 0) + ' / ' + (totals.active_flows || 0)),
-				stat(_('Current highest risk'), String(totals.highest_risk || 0),
-					riskClass(totals.highest_risk || 0))
-			]),
-			E('div', { 'class': 'ofi-workspace' }, [
-				E('div', {
-					'class': 'ofi-tabs',
-					'role': 'tablist',
-					'aria-label': _('Flow Insight sections')
-				}, [
-					tabButton('trend', _('Live trend'), this.activeTab === 'trend', false, selectTab),
-					tabButton('hosts', [
-						_('LAN hosts'),
-						E('span', { 'class': 'ofi-tab-count' }, String(hosts.length))
-					], this.activeTab === 'hosts', false, selectTab),
-					tabButton('connections', [
-						_('Current connections'),
-						selectedHost ? E('span', { 'class': 'ofi-tab-count' }, String(selectedFlows.length)) : ''
-					], this.activeTab === 'connections', !selectedHost, selectTab)
+		var connectionsPanel = E('section', {
+			'class': 'cbi-section ofi-panel',
+			'data-tab': 'connections',
+			'data-tab-title': _('Current connections'),
+			'data-tab-active': this.activeTab === 'connections' ? 'true' : null,
+			'tabindex': '-1',
+			'data-ofi-panel': 'connections'
+		}, connectionsContent);
+		[
+			[ 'trend', trendPanel ],
+			[ 'hosts', hostsPanel ],
+			[ 'connections', connectionsPanel ]
+		].forEach(function(entry) {
+			entry[1].addEventListener('cbi-tab-active', function() {
+				self.activeTab = entry[0];
+			});
+		});
+		var tabGroup = E('div', { 'class': 'ofi-tab-group' }, [
+			trendPanel, hostsPanel, connectionsPanel
+		]);
+		var content = [
+			E('h2', {}, _('Flow Insight')),
+			E('p', { 'class': 'ofi-lead' },
+				_('Cumulative LAN-host usage, live connections, and offline IP risk evidence')),
+			E('div', { 'class': 'ofi-toolbar' }, [
+				E('span', { 'class': 'ofi-live' }, [
+					E('span', { 'class': 'ofi-live-dot' }), _('Refreshes every 2 seconds')
 				]),
-				activePanel
+				E('button', {
+					'class': 'cbi-button cbi-button-action',
+					'disabled': dataStatus.update_running ? '' : null,
+					'click': ui.createHandlerFn(this, function() {
+						return callUpdate().then(function() {
+							ui.addNotification(null, E('p', {},
+								_('Dataset update started in the background.')));
+						});
+					})
+				}, dataStatus.update_running ? _('Updating…') : _('Update datasets'))
+			])
+		].concat(warnings, [
+			E('section', { 'class': 'cbi-section ofi-summary-section' }, [
+				E('h3', {}, _('Traffic overview')),
+				table(
+					[
+						_('Current download'), _('Current upload'),
+						_('Total downloaded'), _('Total uploaded'),
+						_('Active hosts / connections'), _('Current highest risk')
+					],
+					[
+						E('tr', { 'class': 'tr' }, [
+							E('td', { 'class': 'td ofi-num ofi-down' },
+								rate(totals.download_bps)),
+							E('td', { 'class': 'td ofi-num ofi-up' },
+								rate(totals.upload_bps)),
+							E('td', { 'class': 'td ofi-num' }, bytes(totals.downloaded)),
+							E('td', { 'class': 'td ofi-num' }, bytes(totals.uploaded)),
+							E('td', { 'class': 'td ofi-num' },
+								(totals.active_hosts || 0) + ' / ' +
+								(totals.active_flows || 0)),
+							E('td', { 'class': 'td ofi-num' },
+								riskBadge({ score: totals.highest_risk || 0 }))
+						])
+					],
+					'ofi-summary-table'
+				)
 			]),
-			E('section', { 'class': 'ofi-footnote' }, [
+			tabGroup,
+			E('div', { 'class': 'alert-message notice ofi-footnote' }, [
 				E('strong', {}, _('Risk score:') + ' '),
 				_('A score of 0 means the IP was not observed in the loaded datasets; it does not mean safe. The score starts with the most severe evidence, adds 5 for each additional independent source, and is capped at 100. It is only a triage aid and never blocks an IP automatically.'),
 				E('br'),
@@ -637,8 +580,9 @@ return view.extend({
 				_('Monitored LAN prefixes:') + ' ' +
 				((health.lan_prefixes || []).join(', ') || '—')
 			])
-		);
+		]);
 		dom.content(this.root, content);
+		ui.tabs.initTabGroup(tabGroup.childNodes);
 		if (this.pendingDetailFocus) {
 			this.pendingDetailFocus = false;
 			window.requestAnimationFrame(function() {

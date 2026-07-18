@@ -188,8 +188,11 @@ msgstr "活动主机 / 连接"
 msgid "Current highest risk"
 msgstr "当前最高风险"
 
-msgid "Flow Insight sections"
-msgstr "流量洞察栏目"
+msgid "Traffic overview"
+msgstr "流量概览"
+
+msgid "Select a LAN host to view its current connections."
+msgstr "请选择一台内网主机以查看其当前连接。"
 
 msgid "Live trend"
 msgstr "实时趋势"

@@ -39,7 +39,7 @@
 - 日语安装可选包 `luci-i18n-op-flow-ja`。
 
 语言包必须与主程序使用相同版本。`r1` 至 `r5` 的页面是硬编码中文，不能通过安装
-`r6` 语言包翻译；要使用英语或日语界面，需要同时升级到 `r6` 主程序。若希望整个
+`r6` 及后续语言包翻译；要使用英语或日语界面，需要同时升级到当前版本主程序。若希望整个
 LuCI 都显示日语，固件还需要 LuCI 基础日语包（通常为 `luci-i18n-base-ja`）。
 
 ## 安装
@@ -47,7 +47,7 @@ LuCI 都显示日语，固件还需要 LuCI 基础日语包（通常为 `luci-i1
 从构建产物取得 `op-flow-insight-<版本>-r<修订>.apk`，上传到路由器后安装。自行构建的包没有加入 OpenWrt 官方签名仓库，因此需要显式允许本地未受信任包：
 
 ```sh
-apk add --allow-untrusted ./op-flow-insight-0.1.1-r6.apk
+apk add --allow-untrusted ./op-flow-insight-0.1.1-r7.apk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```
@@ -56,10 +56,10 @@ apk add --allow-untrusted ./op-flow-insight-0.1.1-r6.apk
 
 ```sh
 # 简体中文
-apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r6.apk
+apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r7.apk
 
 # 日语
-apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r6.apk
+apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r7.apk
 ```
 
 然后打开 LuCI 的“状态 → 流量洞察”。首次安装后可点击“更新数据集”，也可在 SSH 中同步执行：
@@ -80,10 +80,10 @@ logread -e op-flow
 24.10.x 仍使用 opkg/IPK。上传 IPK 后安装：
 
 ```sh
-opkg install ./op-flow-insight_0.1.1-r6_x86_64.ipk
+opkg install ./op-flow-insight_0.1.1-r7_x86_64.ipk
 # 可选：简体中文或日语，二选一
-opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r6_all.ipk
-# opkg install ./luci-i18n-op-flow-ja_0.1.1-r6_all.ipk
+opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r7_all.ipk
+# opkg install ./luci-i18n-op-flow-ja_0.1.1-r7_all.ipk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```
