@@ -1,5 +1,8 @@
 # 更新记录
 
+[简体中文](CHANGELOG.md) | [English](CHANGELOG_EN.md) |
+[日本語](CHANGELOG_JA.md)
+
 本项目在公开仓库建立前完成了数轮本地迭代。`r1` 至 `r4` 当时没有保留各自独立的 Git
 提交，因此这些版本在 GitHub Releases 中作为历史二进制归档；GitHub 自动生成的
 “Source code”压缩包不代表对应旧版本源码。自 `r5` 起，版本标签与源码提交一一对应。
@@ -44,4 +47,3 @@
 - 支持离线国家/地区与 ASN 归属识别。
 - 使用 GitHub 公开威胁数据集生成可解释的 0–100 IP 风险分。
 - 提供 LuCI 配置页、UCI 配置、rpcd ACL 和 procd 服务。
-

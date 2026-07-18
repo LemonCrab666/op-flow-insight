@@ -1,5 +1,7 @@
 # OP Flow Insight
 
+[简体中文](README.md) | [English](README_EN.md) | [日本語](README_JA.md)
+
 面向 ImmortalWrt 25.12.0 x86_64 的 LuCI 流量洞察插件。它在路由器本地累计各内网主机的上传、下载用量，约每 2 秒展示实时速率与活动连接，并使用离线 GitHub 公共数据集展示远端 IP 的国家/地区、ASN 和 0–100 风险证据分。
 
 > 当前实现把“OP”解释为 OpenWrt 系平台。如果目标固件不是 OpenWrt，请保留 Go 后台与数据层，替换 `openwrt/rootfs` 下的平台集成即可。
@@ -25,6 +27,18 @@
 - LuCI、rpcd、jsonfilter、CA 证书。
 
 软件流量分载或硬件流量分载会让大量后续报文绕过常规 conntrack 统计。若需要较准确的累计量，请在防火墙设置中关闭 flow offloading。该插件适合家庭/中小网络的可观测性与排查，不应作为运营商计费系统。
+
+## 界面语言与语言包
+
+`0.1.1-r1` 至 `r5` 的 LuCI 页面文字是直接写入 JavaScript 的中文，因此安装包目前
+不依赖 `luci-i18n-*` 语言包，但界面也不会随 LuCI 语言自动切换。本仓库的使用说明和
+Release 正文提供中文、英语和日语。
+
+未来若将界面正式国际化，应把英语作为源码默认文字并使用 LuCI 的 `_()` 翻译接口，
+再提供 `zh_Hans` 与 `ja` 的 PO/LMO。推荐把插件翻译做成可选的
+`luci-i18n-op-flow-zh-cn`、`luci-i18n-op-flow-ja` 包，而不是让主程序强制依赖所有
+语言。英语默认界面不需要语言包；若希望整个 LuCI 都显示日语，固件还需要安装其
+LuCI 基础日语包（通常为 `luci-i18n-base-ja`）。
 
 ## 安装
 
