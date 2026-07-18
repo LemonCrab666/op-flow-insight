@@ -78,7 +78,6 @@ jobs:
       IMMORTALWRT_VERSION: "25.12.0"
       IMMORTALWRT_SDK: "immortalwrt-sdk-25.12.0-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
       IMMORTALWRT_SDK_SHA256: "befa29f07c7922876c875d53df753d5d7c2fe2ba4b15fb40c13a2ab38587f6c3"
-      GOARCH: "arm64"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -106,7 +105,7 @@ jobs:
           tar --zstd -xf "/tmp/${IMMORTALWRT_SDK}" \
             -C /tmp/immortalwrt-sdk --strip-components=1
       - name: Build native ImmortalWrt APK v3
-        run: GOARCH=${GOARCH} bash ./scripts/build-apk.sh /tmp/immortalwrt-sdk
+        run: GOARCH=arm64 bash ./scripts/build-apk.sh /tmp/immortalwrt-sdk
       - name: Verify APK metadata
         run: |
           APK="$(find dist -maxdepth 1 -type f -name 'op-flow-insight-*.apk' | head -n 1)"
@@ -209,7 +208,6 @@ jobs:
       IMMORTALWRT_VERSION: "24.10.6"
       IMMORTALWRT_SDK: "immortalwrt-sdk-24.10.6-mediatek-filogic_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
       IMMORTALWRT_SDK_SHA256: "8b4340a9b7e8802a7ffa6feb99604a27025cf702baeab052b931f1bfa6a9f638"
-      GOARCH: "arm64"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -237,7 +235,7 @@ jobs:
           tar --zstd -xf "/tmp/${IMMORTALWRT_SDK}" \
             -C /tmp/immortalwrt-sdk --strip-components=1
       - name: Build native ImmortalWrt IPK
-        run: GOARCH=${GOARCH} bash ./scripts/build-ipk.sh /tmp/immortalwrt-sdk
+        run: GOARCH=arm64 bash ./scripts/build-ipk.sh /tmp/immortalwrt-sdk
       - name: Verify IPK metadata
         run: |
           IPK="$(find dist -maxdepth 1 -type f -name 'op-flow-insight_*.ipk' | head -n 1)"
