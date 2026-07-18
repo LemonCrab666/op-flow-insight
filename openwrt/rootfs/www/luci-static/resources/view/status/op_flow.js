@@ -16,6 +16,35 @@ var callUpdate = rpc.declare({
 	expect: {}
 });
 
+function ensureStyles() {
+	var critical = document.getElementById('op-flow-insight-critical-style');
+	if (!critical) {
+		critical = document.createElement('style');
+		critical.id = 'op-flow-insight-critical-style';
+		critical.textContent =
+			'.ofi-root{clear:both!important;display:block!important;float:none!important;' +
+				'margin:0!important;max-width:100%!important;min-width:0!important;' +
+				'position:relative!important;width:100%!important}' +
+			'.ofi-root>.ofi-header,.ofi-root>.ofi-stats,.ofi-root>.ofi-workspace,' +
+			'.ofi-root>.ofi-footnote,.ofi-root .ofi-panel{float:none!important;' +
+				'max-width:100%!important;position:relative!important;width:100%!important}' +
+			'.ofi-root .ofi-table-scroll{display:block!important;max-width:100%!important;' +
+				'overflow-x:auto!important;width:100%!important}';
+		document.head.appendChild(critical);
+	}
+
+	var stylesheet = document.getElementById('op-flow-insight-stylesheet');
+	if (!stylesheet) {
+		stylesheet = document.createElement('link');
+		stylesheet.id = 'op-flow-insight-stylesheet';
+		stylesheet.rel = 'stylesheet';
+		stylesheet.type = 'text/css';
+		stylesheet.href = L.resource('op-flow.css') + '?v=0.1.1-r6';
+		document.head.appendChild(stylesheet);
+	}
+	return stylesheet;
+}
+
 function bytes(value) {
 	var n = Number(value || 0);
 	var units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB' ];
@@ -49,7 +78,7 @@ function riskBadge(risk) {
 		return item.source + (item.detail ? ' · ' + item.detail : '');
 	}).join('\n');
 	var title = risk.score === 0
-		? '未在已加载的数据集中发现；不代表该 IP 已知安全'
+		? _('Not found in the loaded datasets; this does not mean the IP is known to be safe')
 		: evidence;
 	return E('span', {
 		'class': 'ofi-risk ofi-risk-' + riskClass(Number(risk.score || 0)),
@@ -66,10 +95,12 @@ function endpoint(value) {
 
 function country(value) {
 	var code = text(value);
-	if (code === '—' || code === 'LAN') return code === 'LAN' ? '内网' : code;
+	if (code === '—' || code === 'LAN') return code === 'LAN' ? _('LAN') : code;
 	try {
 		if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
-			var name = new Intl.DisplayNames([ 'zh-CN' ], { type: 'region' }).of(code);
+			var language = document.documentElement.lang ||
+				(typeof navigator !== 'undefined' && navigator.language) || 'en';
+			var name = new Intl.DisplayNames([ language ], { type: 'region' }).of(code);
 			if (name && name !== code) return name + ' (' + code + ')';
 		}
 	} catch (e) {}
@@ -104,10 +135,42 @@ function timeLabel(value, fallback) {
 	});
 }
 
+function warningText(value) {
+	value = String(value || '');
+	var dynamic = [
+		[
+			'Cumulative state file is damaged; restarted from current connections: ',
+			_('Cumulative state file is damaged; restarted from current connections: ')
+		],
+		[
+			'Unable to read conntrack: ',
+			_('Unable to read conntrack: ')
+		],
+		[
+			'Unable to detect LAN prefixes through ubus; using configured prefixes: ',
+			_('Unable to detect LAN prefixes through ubus; using configured prefixes: ')
+		],
+		[
+			'Conntrack destroy events are unavailable; very short connections may be undercounted: ',
+			_('Conntrack destroy events are unavailable; very short connections may be undercounted: ')
+		],
+		[
+			'Failed to save cumulative state: ',
+			_('Failed to save cumulative state: ')
+		]
+	];
+	for (var i = 0; i < dynamic.length; i++) {
+		if (value.indexOf(dynamic[i][0]) === 0)
+			return dynamic[i][1] + value.slice(dynamic[i][0].length);
+	}
+	return _(value);
+}
+
 function sparkline(points) {
 	points = points || [];
 	if (points.length < 2) {
-		return E('div', { 'class': 'ofi-chart-empty' }, '采集数个数据点后显示趋势');
+		return E('div', { 'class': 'ofi-chart-empty' },
+			_('The trend appears after several samples are collected'));
 	}
 	var max = 1;
 	points.forEach(function(p) {
@@ -121,12 +184,12 @@ function sparkline(points) {
 		}).join(' ');
 	}
 	var middle = points[Math.floor((points.length - 1) / 2)];
-	var startLabel = timeLabel(points[0].at, '约 10 分钟前');
-	var middleLabel = timeLabel(middle.at, '约 5 分钟前');
-	var endLabel = timeLabel(points[points.length - 1].at, '现在');
+	var startLabel = timeLabel(points[0].at, _('About 10 minutes ago'));
+	var middleLabel = timeLabel(middle.at, _('About 5 minutes ago'));
+	var endLabel = timeLabel(points[points.length - 1].at, _('Now'));
 	return E('div', { 'class': 'ofi-chart-wrap' }, [
 		E('div', { 'class': 'ofi-chart-stage' }, [
-			E('div', { 'class': 'ofi-axis-title ofi-axis-title-y' }, '速率'),
+			E('div', { 'class': 'ofi-axis-title ofi-axis-title-y' }, _('Rate')),
 			E('div', { 'class': 'ofi-y-scale', 'aria-hidden': 'true' }, [
 				E('span', {}, rate(max)),
 				E('span', {}, rate(max / 2)),
@@ -138,7 +201,7 @@ function sparkline(points) {
 					'viewBox': '0 0 100 40',
 					'preserveAspectRatio': 'none',
 					'role': 'img',
-					'aria-label': '横轴为时间、纵轴为速率的实时上传和下载带宽趋势'
+					'aria-label': _('Live upload and download bandwidth trend with time on the horizontal axis and rate on the vertical axis')
 				}, [
 					svgNode('path', {
 						'class': 'ofi-grid',
@@ -160,11 +223,11 @@ function sparkline(points) {
 				])
 			])
 		]),
-		E('div', { 'class': 'ofi-axis-title ofi-axis-title-x' }, '时间'),
+		E('div', { 'class': 'ofi-axis-title ofi-axis-title-x' }, _('Time')),
 		E('div', { 'class': 'ofi-legend' }, [
-			E('span', { 'class': 'ofi-key ofi-key-down' }, '下载'),
-			E('span', { 'class': 'ofi-key ofi-key-up' }, '上传'),
-			E('span', { 'class': 'ofi-chart-max' }, '峰值 ' + rate(max))
+			E('span', { 'class': 'ofi-key ofi-key-down' }, _('Download')),
+			E('span', { 'class': 'ofi-key ofi-key-up' }, _('Upload')),
+			E('span', { 'class': 'ofi-chart-max' }, _('Peak') + ' ' + rate(max))
 		])
 	]);
 }
@@ -197,12 +260,13 @@ function orderedHosts(hosts) {
 }
 
 function hostLabel(host) {
-	return text(host && host.hostname, '未命名主机') + ' · ' + text(host && host.ip);
+	return text(host && host.hostname, _('Unnamed host')) + ' · ' + text(host && host.ip);
 }
 
 function hostRows(hosts, selectedHostIP, onSelect) {
 	if (!hosts || !hosts.length) {
-		return [ E('tr', {}, [ E('td', { 'colspan': 7, 'class': 'ofi-empty' }, '暂未观察到内网主机连接') ]) ];
+		return [ E('tr', {}, [ E('td', { 'colspan': 7, 'class': 'ofi-empty' },
+			_('No LAN host connections have been observed yet')) ]) ];
 	}
 	return hosts.map(function(host) {
 		var activate = function(event) {
@@ -219,14 +283,14 @@ function hostRows(hosts, selectedHostIP, onSelect) {
 			'data-host': host.ip,
 			'tabindex': '0',
 			'role': 'button',
-			'aria-label': '查看 ' + hostLabel(host) + ' 的当前连接',
+			'aria-label': _('View current connections for') + ' ' + hostLabel(host),
 			'aria-selected': host.ip === selectedHostIP ? 'true' : 'false',
-			'title': '点击查看该主机的当前连接',
+			'title': _('Click to view current connections for this host'),
 			'click': activate,
 			'keydown': activate
 		}, [
 			E('td', {}, [
-				E('strong', {}, text(host.hostname, '未命名主机')),
+				E('strong', {}, text(host.hostname, _('Unnamed host'))),
 				E('div', { 'class': 'ofi-mono ofi-subtle' }, host.ip),
 				host.mac ? E('div', { 'class': 'ofi-mono ofi-subtle' }, host.mac) : ''
 			]),
@@ -244,7 +308,7 @@ function flowRows(flows, emptyMessage) {
 	if (!flows || !flows.length) {
 		return [ E('tr', {}, [
 			E('td', { 'colspan': 8, 'class': 'ofi-empty' },
-				emptyMessage || '当前没有可展示的活动连接')
+				emptyMessage || _('There are no active connections to display'))
 		]) ];
 	}
 	return flows.map(function(flow) {
@@ -254,7 +318,7 @@ function flowRows(flows, emptyMessage) {
 		return E('tr', { 'data-host': flow.host_ip || '' }, [
 			E('td', {}, [
 				E('span', { 'class': 'ofi-direction ofi-direction-' + flow.direction },
-					flow.direction === 'inbound' ? '入站' : '出站'),
+					flow.direction === 'inbound' ? _('Inbound') : _('Outbound')),
 				E('span', { 'class': 'ofi-proto' }, text(flow.protocol).toUpperCase())
 			]),
 			E('td', { 'class': 'ofi-mono' }, endpoint(flow.source)),
@@ -360,14 +424,21 @@ return view.extend({
 	},
 
 	render: function(data) {
-		document.head.appendChild(E('link', {
-			'rel': 'stylesheet',
-			'type': 'text/css',
-			'href': L.resource('op-flow.css')
-		}));
+		var stylesheet = ensureStyles();
 		this.root = E('div', {
 			'class': 'ofi-root' + (darkThemeActive() ? ' ofi-dark' : '')
 		});
+		if (!stylesheet.sheet) {
+			stylesheet.addEventListener('load', L.bind(function() {
+				scheduleThemeLayout(this.root);
+			}, this), { once: true });
+		}
+		if (!this._ofiResizeHandler) {
+			this._ofiResizeHandler = L.bind(function() {
+				scheduleThemeLayout(this.root);
+			}, this);
+			window.addEventListener('resize', this._ofiResizeHandler);
+		}
 		this.activeTab = this.activeTab || 'trend';
 		this.selectedHostIP = this.selectedHostIP || '';
 		this.renderData(data);
@@ -384,9 +455,10 @@ return view.extend({
 		scheduleThemeLayout(this.root);
 		if (!data || data.error) {
 			dom.content(this.root, [
-				E('h2', {}, '流量洞察'),
+				E('h2', {}, _('Flow Insight')),
 				E('div', { 'class': 'alert-message error' },
-					'无法连接后台服务：' + text(data && data.error, '请确认 op-flow 服务正在运行'))
+					_('Unable to connect to the backend service:') + ' ' +
+					text(data && data.error, _('Make sure the op-flow service is running')))
 			]);
 			return;
 		}
@@ -420,34 +492,36 @@ return view.extend({
 			self.renderData(self.lastData);
 		};
 		var warnings = (health.warnings || []).map(function(item) {
-			return E('div', { 'class': 'alert-message warning' }, item);
+			return E('div', { 'class': 'alert-message warning' }, warningText(item));
 		});
 		if (!dataStatus.loaded) {
 			warnings.push(E('div', { 'class': 'alert-message warning' },
-				'离线归属地/风险库尚未加载。点击“更新数据集”，完成前流量统计仍可正常工作。'));
+				_('The offline attribution and risk database is not loaded. Click "Update datasets"; traffic accounting continues to work during the update.')));
 		}
 		var updated = dataStatus.updated_at
 			? new Date(dataStatus.updated_at).toLocaleString()
-			: '尚未更新';
+			: _('Never updated');
 		var content = [
 			E('div', { 'class': 'ofi-header' }, [
 				E('div', {}, [
-					E('h2', {}, '流量洞察'),
-					E('p', { 'class': 'ofi-lead' }, '内网主机累计用量、实时连接与离线 IP 风险证据')
+					E('h2', {}, _('Flow Insight')),
+					E('p', { 'class': 'ofi-lead' },
+						_('Cumulative LAN-host usage, live connections, and offline IP risk evidence'))
 				]),
 				E('div', { 'class': 'ofi-actions' }, [
 					E('span', { 'class': 'ofi-live' }, [
-						E('span', { 'class': 'ofi-live-dot' }), '每 2 秒刷新'
+						E('span', { 'class': 'ofi-live-dot' }), _('Refreshes every 2 seconds')
 					]),
 					E('button', {
 						'class': 'btn cbi-button-action',
 						'disabled': dataStatus.update_running ? '' : null,
 						'click': ui.createHandlerFn(this, function() {
 							return callUpdate().then(function() {
-								ui.addNotification(null, E('p', {}, '数据集更新已在后台启动。'));
+								ui.addNotification(null, E('p', {},
+									_('Dataset update started in the background.')));
 							});
 						})
-					}, dataStatus.update_running ? '正在更新…' : '更新数据集')
+					}, dataStatus.update_running ? _('Updating…') : _('Update datasets'))
 				])
 			])
 		].concat(warnings);
@@ -460,13 +534,18 @@ return view.extend({
 			}, [
 				E('div', { 'class': 'ofi-panel-title' }, [
 					E('div', {}, [
-						E('h3', {}, '内网主机'),
-						E('div', { 'class': 'ofi-panel-hint' }, '按 IP 地址固定排序；点击一行查看该主机的当前连接')
+						E('h3', {}, _('LAN hosts')),
+						E('div', { 'class': 'ofi-panel-hint' },
+							_('Sorted by IP address; click a row to view the host\'s current connections'))
 					]),
-					E('span', { 'class': 'ofi-subtle' }, hosts.length + ' 台已记录')
+					E('span', { 'class': 'ofi-subtle' },
+						String(hosts.length) + ' ' + _('hosts recorded'))
 				]),
 				table(
-					[ '主机', '实时下载', '实时上传', '累计下载', '累计上传', '连接', '风险' ],
+					[
+						_('Host'), _('Live download'), _('Live upload'),
+						_('Downloaded'), _('Uploaded'), _('Connections'), _('Risk')
+					],
 					hostRows(hosts, this.selectedHostIP, selectHost),
 					'ofi-host-table'
 				)
@@ -480,21 +559,28 @@ return view.extend({
 			}, [
 				E('div', { 'class': 'ofi-panel-title' }, [
 					E('div', {}, [
-						E('h3', {}, '当前连接 · ' + text(selectedHost.hostname, '未命名主机')),
+						E('h3', {}, _('Current connections') + ' · ' +
+							text(selectedHost.hostname, _('Unnamed host'))),
 						E('div', { 'class': 'ofi-panel-hint ofi-mono' },
 							selectedHost.ip + (selectedHost.mac ? ' · ' + selectedHost.mac : ''))
 					]),
-					E('span', { 'class': 'ofi-subtle' }, selectedFlows.length + ' 条活动连接')
+					E('span', { 'class': 'ofi-subtle' },
+						String(selectedFlows.length) + ' ' + _('active connections'))
 				]),
 				E('div', { 'class': 'ofi-detail-summary' }, [
-					E('span', {}, [ '实时下载 ', E('strong', { 'class': 'ofi-down' }, rate(selectedHost.download_bps)) ]),
-					E('span', {}, [ '实时上传 ', E('strong', { 'class': 'ofi-up' }, rate(selectedHost.upload_bps)) ]),
-					E('span', {}, '累计下载 ' + bytes(selectedHost.downloaded)),
-					E('span', {}, '累计上传 ' + bytes(selectedHost.uploaded))
+					E('span', {}, [ _('Live download') + ' ',
+						E('strong', { 'class': 'ofi-down' }, rate(selectedHost.download_bps)) ]),
+					E('span', {}, [ _('Live upload') + ' ',
+						E('strong', { 'class': 'ofi-up' }, rate(selectedHost.upload_bps)) ]),
+					E('span', {}, _('Downloaded') + ' ' + bytes(selectedHost.downloaded)),
+					E('span', {}, _('Uploaded') + ' ' + bytes(selectedHost.uploaded))
 				]),
 				table(
-					[ '方向', '源 IP', '', '目标 IP', '归属 / ASN', '下载', '上传', '风险' ],
-					flowRows(selectedFlows, '该主机当前没有活动连接'),
+					[
+						_('Direction'), _('Source IP'), '', _('Destination IP'),
+						_('Attribution / ASN'), _('Download'), _('Upload'), _('Risk')
+					],
+					flowRows(selectedFlows, _('This host has no active connections')),
 					'ofi-flow-table'
 				)
 			]);
@@ -506,44 +592,50 @@ return view.extend({
 				'data-ofi-panel': 'trend'
 			}, [
 				E('div', { 'class': 'ofi-panel-title' }, [
-					E('h3', {}, '实时带宽趋势'),
-					E('span', { 'class': 'ofi-subtle' }, '最近约 10 分钟')
+					E('h3', {}, _('Live bandwidth trend')),
+					E('span', { 'class': 'ofi-subtle' }, _('About the last 10 minutes'))
 				]),
 				sparkline(data.history)
 			]);
 		}
 		content.push(
 			E('div', { 'class': 'ofi-stats' }, [
-				stat('当前下载', rate(totals.download_bps), 'down'),
-				stat('当前上传', rate(totals.upload_bps), 'up'),
-				stat('累计下载', bytes(totals.downloaded)),
-				stat('累计上传', bytes(totals.uploaded)),
-				stat('活动主机 / 连接', (totals.active_hosts || 0) + ' / ' + (totals.active_flows || 0)),
-				stat('当前最高风险', String(totals.highest_risk || 0), riskClass(totals.highest_risk || 0))
+				stat(_('Current download'), rate(totals.download_bps), 'down'),
+				stat(_('Current upload'), rate(totals.upload_bps), 'up'),
+				stat(_('Total downloaded'), bytes(totals.downloaded)),
+				stat(_('Total uploaded'), bytes(totals.uploaded)),
+				stat(_('Active hosts / connections'),
+					(totals.active_hosts || 0) + ' / ' + (totals.active_flows || 0)),
+				stat(_('Current highest risk'), String(totals.highest_risk || 0),
+					riskClass(totals.highest_risk || 0))
 			]),
 			E('div', { 'class': 'ofi-workspace' }, [
 				E('div', {
 					'class': 'ofi-tabs',
 					'role': 'tablist',
-					'aria-label': '流量洞察栏目'
+					'aria-label': _('Flow Insight sections')
 				}, [
-					tabButton('trend', '实时趋势', this.activeTab === 'trend', false, selectTab),
+					tabButton('trend', _('Live trend'), this.activeTab === 'trend', false, selectTab),
 					tabButton('hosts', [
-						'内网主机',
+						_('LAN hosts'),
 						E('span', { 'class': 'ofi-tab-count' }, String(hosts.length))
 					], this.activeTab === 'hosts', false, selectTab),
 					tabButton('connections', [
-						'当前连接',
+						_('Current connections'),
 						selectedHost ? E('span', { 'class': 'ofi-tab-count' }, String(selectedFlows.length)) : ''
 					], this.activeTab === 'connections', !selectedHost, selectTab)
 				]),
 				activePanel
 			]),
 			E('section', { 'class': 'ofi-footnote' }, [
-				E('strong', {}, '风险评分说明：'),
-				'0 分表示未在已加载数据集中观察到，不代表安全。评分以最高严重证据为基准，每个额外独立来源增加 5 分，封顶 100；仅用于排查优先级，不会自动封禁 IP。',
+				E('strong', {}, _('Risk score:') + ' '),
+				_('A score of 0 means the IP was not observed in the loaded datasets; it does not mean safe. The score starts with the most severe evidence, adds 5 for each additional independent source, and is capped at 100. It is only a triage aid and never blocks an IP automatically.'),
 				E('br'),
-				'数据更新时间：' + updated + '；归属地为国家/地区与 ASN 级别，所有查询均在路由器本地完成。'
+				_('Data updated:') + ' ' + updated + '. ' +
+				_('Attribution is limited to country/region and ASN, and all lookups run locally on the router.'),
+				E('br'),
+				_('Monitored LAN prefixes:') + ' ' +
+				((health.lan_prefixes || []).join(', ') || '—')
 			])
 		);
 		dom.content(this.root, content);

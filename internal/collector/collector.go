@@ -20,23 +20,25 @@ import (
 )
 
 type Tracker struct {
-	mu            sync.RWMutex
-	saveMu        sync.Mutex
-	cfg           config.Config
-	data          *dataset.Manager
-	hosts         map[string]model.Host
-	active        map[string]store.Baseline
-	flows         []model.Flow
-	history       []model.RatePoint
-	health        model.Health
-	started       time.Time
-	lastPoll      time.Time
-	lastHistory   time.Time
-	leases        map[string]lease
-	localAddrs    map[netip.Addr]bool
-	lastLeaseRead time.Time
-	version       string
-	lastSaveError string
+	mu             sync.RWMutex
+	saveMu         sync.Mutex
+	cfg            config.Config
+	data           *dataset.Manager
+	hosts          map[string]model.Host
+	active         map[string]store.Baseline
+	flows          []model.Flow
+	history        []model.RatePoint
+	health         model.Health
+	started        time.Time
+	lastPoll       time.Time
+	lastHistory    time.Time
+	leases         map[string]lease
+	localAddrs     map[netip.Addr]bool
+	lanPrefixes    []netip.Prefix
+	lastLeaseRead  time.Time
+	lastPrefixRead time.Time
+	version        string
+	lastSaveError  string
 }
 
 type lease struct {
@@ -61,13 +63,15 @@ func New(cfg config.Config, data *dataset.Manager, version string) (*Tracker, er
 			ConntrackReadable: false,
 			AccountingEnabled: false,
 		},
-		started:    time.Now().UTC(),
-		leases:     make(map[string]lease),
-		localAddrs: localInterfaceAddrs(),
-		version:    version,
+		started:     time.Now().UTC(),
+		leases:      make(map[string]lease),
+		localAddrs:  localInterfaceAddrs(),
+		lanPrefixes: append([]netip.Prefix(nil), cfg.LANPrefixes...),
+		version:     version,
 	}
 	if err != nil {
-		tracker.health.Warnings = append(tracker.health.Warnings, "累计状态文件损坏，已从当前连接重新开始："+err.Error())
+		tracker.health.Warnings = append(tracker.health.Warnings,
+			"Cumulative state file is damaged; restarted from current connections: "+err.Error())
 	}
 	return tracker, nil
 }
@@ -92,12 +96,13 @@ func (t *Tracker) Run(ctx context.Context) {
 }
 
 func (t *Tracker) pollFile(now time.Time) {
+	t.refreshLANPrefixes(now)
 	f, err := os.Open(t.cfg.ConntrackPath)
 	if err != nil {
 		t.mu.Lock()
 		t.health.ConntrackReadable = false
 		t.health.Warnings = uniqueWarnings(append(t.health.Warnings,
-			"无法读取 conntrack："+err.Error(),
+			"Unable to read conntrack: "+err.Error(),
 		))
 		t.mu.Unlock()
 		return
@@ -115,10 +120,11 @@ func (t *Tracker) Poll(r io.Reader, now time.Time) {
 
 	t.health.ConntrackReadable = true
 	t.health.AccountingEnabled = parsed.HasBytes
-	t.health.Warnings = removeWarningPrefixes(t.health.Warnings, "无法读取 conntrack", "conntrack 未提供字节计数")
+	t.health.Warnings = removeWarningPrefixes(t.health.Warnings,
+		"Unable to read conntrack", "Conntrack byte counters are unavailable")
 	if parsed.Lines > 0 && !parsed.HasBytes {
 		t.health.Warnings = append(t.health.Warnings,
-			"conntrack 未提供字节计数；请启用 net.netfilter.nf_conntrack_acct=1 后建立新连接",
+			"Conntrack byte counters are unavailable; enable net.netfilter.nf_conntrack_acct=1 and establish new connections",
 		)
 	}
 
@@ -261,10 +267,10 @@ func (t *Tracker) SetDestroyEventHealth(active bool, err error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.health.DestroyEvents = active
-	t.health.Warnings = removeWarningPrefixes(t.health.Warnings, "conntrack 销毁事件")
+	t.health.Warnings = removeWarningPrefixes(t.health.Warnings, "Conntrack destroy events")
 	if err != nil {
 		t.health.Warnings = append(t.health.Warnings,
-			"conntrack 销毁事件不可用，极短连接可能少计："+err.Error(),
+			"Conntrack destroy events are unavailable; very short connections may be undercounted: "+err.Error(),
 		)
 	}
 }
@@ -349,7 +355,7 @@ func localInterfaceAddrs() map[netip.Addr]bool {
 }
 
 func (t *Tracker) isLAN(addr netip.Addr) bool {
-	for _, prefix := range t.cfg.LANPrefixes {
+	for _, prefix := range t.lanPrefixes {
 		if prefix.Contains(addr) {
 			return true
 		}
@@ -402,8 +408,12 @@ func (t *Tracker) Snapshot() model.Dashboard {
 	})
 	health := t.health
 	health.Warnings = append([]string(nil), t.health.Warnings...)
+	health.LANPrefixes = make([]string, 0, len(t.lanPrefixes))
+	for _, prefix := range t.lanPrefixes {
+		health.LANPrefixes = append(health.LANPrefixes, prefix.String())
+	}
 	if t.lastSaveError != "" {
-		health.Warnings = append(health.Warnings, "累计状态保存失败："+t.lastSaveError)
+		health.Warnings = append(health.Warnings, "Failed to save cumulative state: "+t.lastSaveError)
 	}
 	return model.Dashboard{
 		Version: t.version, GeneratedAt: time.Now().UTC(),

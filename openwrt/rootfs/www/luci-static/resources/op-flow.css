@@ -458,6 +458,10 @@
 	min-width: 980px;
 }
 
+.ofi-host-table {
+	min-width: 980px;
+}
+
 .ofi-root .ofi-table thead tr,
 .ofi-root .ofi-table thead th {
 	background: var(--ofi-panel-alt) !important;
@@ -529,12 +533,13 @@
 .ofi-host-table th:nth-child(5),
 .ofi-host-table td:nth-child(5) { width: 13%; }
 .ofi-host-table th:nth-child(6),
-.ofi-host-table td:nth-child(6) { width: 10%; }
+.ofi-host-table td:nth-child(6) { width: 12%; }
 .ofi-host-table th:nth-child(7),
-.ofi-host-table td:nth-child(7) { width: 9%; }
+.ofi-host-table td:nth-child(7) { width: 7%; }
 
 .ofi-host-table th:nth-child(n+2) {
 	text-align: right !important;
+	white-space: nowrap;
 }
 
 .ofi-flow-table th:nth-child(1),
@@ -559,7 +564,9 @@
 }
 
 .ofi-flow-table th:nth-child(n+6) {
+	overflow-wrap: anywhere;
 	text-align: right !important;
+	white-space: normal;
 }
 
 .ofi-num {

@@ -23,6 +23,8 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Check translations
+        run: python3 scripts/check-translations.py
       - name: Test
         run: go test ./...
       - name: Vet
@@ -52,6 +54,14 @@ jobs:
             | tee "$APK.metadata.json"
           grep -q '"op-flow-insight"' "$APK.metadata.json"
           grep -q '"x86_64"' "$APK.metadata.json"
+          for NAME in luci-i18n-op-flow-zh-cn luci-i18n-op-flow-ja; do
+            TRANSLATION="$(find dist -maxdepth 1 -type f -name "${NAME}-*.apk" | head -n 1)"
+            test -n "$TRANSLATION"
+            /tmp/immortalwrt-sdk/staging_dir/host/bin/apk adbdump \
+              --format json "$TRANSLATION" \
+              | tee "$TRANSLATION.metadata.json"
+            grep -q "\"$NAME\"" "$TRANSLATION.metadata.json"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: op-flow-insight-immortalwrt-25.12.0-x86_64-apk
@@ -74,6 +84,8 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Check translations
+        run: python3 scripts/check-translations.py
       - name: Test
         run: go test ./...
       - name: Vet
@@ -107,6 +119,18 @@ jobs:
           tar -xOzf "$IPK" ./data.tar.gz \
             | tar -tz \
             | grep -q './usr/sbin/op-flowd'
+          for NAME in luci-i18n-op-flow-zh-cn luci-i18n-op-flow-ja; do
+            TRANSLATION="$(find dist -maxdepth 1 -type f -name "${NAME}_*.ipk" | head -n 1)"
+            test -n "$TRANSLATION"
+            tar -xOzf "$TRANSLATION" ./control.tar.gz \
+              | tar -xzO ./control \
+              | tee "$TRANSLATION.control.txt"
+            grep -q "^Package: $NAME$" "$TRANSLATION.control.txt"
+            grep -q '^Architecture: all$' "$TRANSLATION.control.txt"
+            tar -xOzf "$TRANSLATION" ./data.tar.gz \
+              | tar -tz \
+              | grep -q '/usr/lib/lua/luci/i18n/op-flow\.'
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: op-flow-insight-immortalwrt-24.10.6-x86_64-ipk

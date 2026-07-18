@@ -17,7 +17,8 @@ OP Flow Insight は ImmortalWrt 25.12.0 x86_64 向けの LuCI
 - LAN IP ごとのアップロード／ダウンロード累積バイト数を永続化。
 - ホスト別・全体のリアルタイム速度、接続数、約 10 分間のトレンドグラフ。
 - 各接続の方向、プロトコル、送信元 IP／ポート、宛先 IP／ポートを表示。
-- IPv4、IPv6、通常の外向き通信、ポート転送（DNAT）による内向き通信に対応。
+- IPv4、IPv6、通常の外向き通信、ポート転送（DNAT）による内向き通信に対応し、
+  LAN へ委任されたグローバル IPv6 プレフィックスを自動検出。
 - dnsmasq DHCP リースからホスト名と MAC アドレスを自動取得。
 - ルーター自身のインターフェースアドレスを自動除外。
 - リモート IP の国・地域、ASN、ネットワーク組織を完全オフラインで検索し、
@@ -41,17 +42,18 @@ OP Flow Insight は ImmortalWrt 25.12.0 x86_64 向けの LuCI
 
 ## UI 言語と言語パッケージ
 
-`0.1.1-r1`～`r5` の LuCI 画面は、中国語の文字列を JavaScript に直接記述しています。
-そのため現在のパッケージは `luci-i18n-*` に依存しませんが、LuCI の選択言語に応じて
-画面が切り替わるわけでもありません。リポジトリの説明と GitHub Release ノートは
-中国語、英語、日本語で提供します。
+`0.1.1-r6` 以降は英語をソース兼フォールバック言語とし、すべての画面文字列で
+LuCI の `_()` 翻訳 API を使用します。コアパッケージは全言語を強制インストール
+しません。
 
-将来 UI を正式に多言語化する場合は、英語をソース言語として LuCI の `_()` 翻訳 API
-を使用し、`zh_Hans` と `ja` の PO/LMO を用意します。コアパッケージから全言語へ
-強制依存させず、`luci-i18n-op-flow-zh-cn` と
-`luci-i18n-op-flow-ja` を任意パッケージとして提供する構成が推奨です。英語の
-デフォルト UI には言語パッケージは不要です。LuCI 全体を日本語表示にするには、
-通常 `luci-i18n-base-ja` という LuCI 基本日本語パッケージもファームウェア側に
+- `op-flow-insight` だけをインストールすると英語表示になります。英語パッケージは不要です。
+- 簡体字中国語には `luci-i18n-op-flow-zh-cn` を追加します。
+- 日本語には `luci-i18n-op-flow-ja` を追加します。
+
+言語パッケージとコアパッケージのバージョンは一致させてください。`r1`～`r5` は
+中国語文字列がハードコードされているため、`r6` の言語パッケージでは翻訳できません。
+英語または日本語 UI を使う場合はコアも `r6` へ更新してください。LuCI 全体を
+日本語表示にするには、通常 `luci-i18n-base-ja` という LuCI 基本日本語パッケージも
 必要です。
 
 ## インストール
@@ -61,9 +63,19 @@ OP Flow Insight は ImmortalWrt 25.12.0 x86_64 向けの LuCI
 未信頼パッケージを明示的に許可してインストールします。
 
 ```sh
-apk add --allow-untrusted ./op-flow-insight-0.1.1-r5.apk
+apk add --allow-untrusted ./op-flow-insight-0.1.1-r6.apk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
+```
+
+LuCI で選択する言語に合わせて、任意の言語パッケージを 1 つ追加します。
+
+```sh
+# 簡体字中国語
+apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r6.apk
+
+# 日本語
+apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r6.apk
 ```
 
 LuCI の **ステータス → Flow Insight** を開きます。初回インストール後は
@@ -85,7 +97,10 @@ logread -e op-flow
 ImmortalWrt 24.10.x は引き続き opkg/IPK を使用します。
 
 ```sh
-opkg install ./op-flow-insight_0.1.1-r5_x86_64.ipk
+opkg install ./op-flow-insight_0.1.1-r6_x86_64.ipk
+# 任意：簡体字中国語または日本語を選択
+opkg install ./luci-i18n-op-flow-ja_0.1.1-r6_all.ipk
+# opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r6_all.ipk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```
@@ -193,4 +208,3 @@ bash ./scripts/build-ipk.sh /opt/immortalwrt-sdk-24.10.6-x86-64
   照合してください。
 - CDN、クラウド、共有ホスティングでは IP が再利用されます。リスクスコアを現在の
   利用者へ直接帰属させないでください。
-

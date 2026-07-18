@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -143,6 +143,7 @@
 			addNotification: function() {}
 		};
 		var view = { extend: function(definition) { return definition; } };
+		function _(message) { return message; }
 		var L = {
 			resource: function(path) {
 				return '../openwrt/rootfs/www/luci-static/resources/' + path;
@@ -215,8 +216,8 @@
 			add('upload chart line visible', getComputedStyle(paths[2]).stroke !== 'none' &&
 				getComputedStyle(paths[2]).visibility === 'visible');
 			add('chart axes expose time and rate units',
-				document.querySelector('.ofi-axis-title-y').textContent === '速率' &&
-				document.querySelector('.ofi-axis-title-x').textContent === '时间' &&
+				document.querySelector('.ofi-axis-title-y').textContent === 'Rate' &&
+				document.querySelector('.ofi-axis-title-x').textContent === 'Time' &&
 				yLabels.length === 3 && yLabels.every(function(item) { return /\/s$/.test(item.textContent); }) &&
 				xLabels.length === 3 && xLabels.every(function(item) { return /\d{2}:\d{2}/.test(item.textContent); }));
 			add('Bandix-style tabs are contained', tabs.length === 3 &&
@@ -237,14 +238,23 @@
 				rgb(document.querySelector('.ofi-host-table td.ofi-up')).toLowerCase() === expectedUp);
 			var hostHeaders = Array.from(document.querySelectorAll('.ofi-host-table thead th'));
 			var hostCells = Array.from(document.querySelectorAll('.ofi-host-table tbody tr:first-child td'));
-			add('host numeric headers align with data', hostHeaders.slice(1).every(function(header, index) {
+			var hostAlignment = hostHeaders.slice(1).map(function(header, index) {
 				var cell = hostCells[index + 1];
-				return getComputedStyle(header).textAlign === 'right' &&
+				return {
+					header: Math.round(textRect(header).right * 10) / 10,
+					cell: Math.round(textRect(cell).right * 10) / 10,
+					pass: getComputedStyle(header).textAlign === 'right' &&
 					getComputedStyle(cell).textAlign === 'right' &&
-					Math.abs(textRect(header).right - textRect(cell).right) <= 3;
-			}));
+					Math.abs(textRect(header).right - textRect(cell).right) <= 3
+				};
+			});
+			add('host numeric headers align with data',
+				hostAlignment.every(function(item) { return item.pass; }),
+				JSON.stringify(hostAlignment));
 			add('host rows advertise connection drill-down',
-				hostRows.every(function(row) { return row.tabIndex === 0 && /当前连接/.test(row.title); }));
+				hostRows.every(function(row) {
+					return row.tabIndex === 0 && /current connections/i.test(row.title);
+				}));
 			add('table viewport is contained', Array.from(document.querySelectorAll('.ofi-table-scroll')).every(function(item) {
 				return item.getBoundingClientRect().right <= root.right + 2;
 			}));
@@ -262,7 +272,7 @@
 				window.testModule.renderData(updated);
 				var panel = document.querySelector('[data-ofi-panel="connections"]');
 				return Boolean(panel) && /10\.64\.0\.5/.test(panel.textContent) &&
-					document.querySelector('.ofi-tab-active').textContent.indexOf('当前连接') >= 0;
+					document.querySelector('.ofi-tab-active').textContent.indexOf('Current connections') >= 0;
 			})());
 
 			tabs = Array.from(document.querySelectorAll('.ofi-tab'));

@@ -1,0 +1,282 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: op-flow-insight 0.1.1-r6\n"
+"Language: zh_Hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Flow Insight"
+msgstr "流量洞察"
+
+msgid "Flow Insight Settings"
+msgstr "流量洞察设置"
+
+msgid "Not found in the loaded datasets; this does not mean the IP is known to be safe"
+msgstr "未在已加载的数据集中发现；不代表该 IP 已知安全"
+
+msgid "LAN"
+msgstr "内网"
+
+msgid "Cumulative state file is damaged; restarted from current connections: "
+msgstr "累计状态文件损坏，已从当前连接重新开始："
+
+msgid "Unable to read conntrack: "
+msgstr "无法读取 conntrack："
+
+msgid "Unable to detect LAN prefixes through ubus; using configured prefixes: "
+msgstr "无法通过 ubus 检测 LAN 前缀，现使用配置的前缀："
+
+msgid "Conntrack byte counters are unavailable; enable net.netfilter.nf_conntrack_acct=1 and establish new connections"
+msgstr "conntrack 未提供字节计数；请启用 net.netfilter.nf_conntrack_acct=1 后建立新连接"
+
+msgid "Conntrack destroy events are unavailable; very short connections may be undercounted: "
+msgstr "conntrack 销毁事件不可用，极短连接可能少计："
+
+msgid "Failed to save cumulative state: "
+msgstr "累计状态保存失败："
+
+msgid "The trend appears after several samples are collected"
+msgstr "采集数个数据点后显示趋势"
+
+msgid "About 10 minutes ago"
+msgstr "约 10 分钟前"
+
+msgid "About 5 minutes ago"
+msgstr "约 5 分钟前"
+
+msgid "Now"
+msgstr "现在"
+
+msgid "Rate"
+msgstr "速率"
+
+msgid "Live upload and download bandwidth trend with time on the horizontal axis and rate on the vertical axis"
+msgstr "横轴为时间、纵轴为速率的实时上传和下载带宽趋势"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Peak"
+msgstr "峰值"
+
+msgid "Unnamed host"
+msgstr "未命名主机"
+
+msgid "No LAN host connections have been observed yet"
+msgstr "暂未观察到内网主机连接"
+
+msgid "View current connections for"
+msgstr "查看当前连接："
+
+msgid "Click to view current connections for this host"
+msgstr "点击查看该主机的当前连接"
+
+msgid "There are no active connections to display"
+msgstr "当前没有可展示的活动连接"
+
+msgid "Inbound"
+msgstr "入站"
+
+msgid "Outbound"
+msgstr "出站"
+
+msgid "Unable to connect to the backend service:"
+msgstr "无法连接后台服务："
+
+msgid "Make sure the op-flow service is running"
+msgstr "请确认 op-flow 服务正在运行"
+
+msgid "The offline attribution and risk database is not loaded. Click \"Update datasets\"; traffic accounting continues to work during the update."
+msgstr "离线归属地/风险库尚未加载。点击“更新数据集”，完成前流量统计仍可正常工作。"
+
+msgid "Never updated"
+msgstr "尚未更新"
+
+msgid "Cumulative LAN-host usage, live connections, and offline IP risk evidence"
+msgstr "内网主机累计用量、实时连接与离线 IP 风险证据"
+
+msgid "Refreshes every 2 seconds"
+msgstr "每 2 秒刷新"
+
+msgid "Dataset update started in the background."
+msgstr "数据集更新已在后台启动。"
+
+msgid "Updating…"
+msgstr "正在更新…"
+
+msgid "Update datasets"
+msgstr "更新数据集"
+
+msgid "LAN hosts"
+msgstr "内网主机"
+
+msgid "Sorted by IP address; click a row to view the host's current connections"
+msgstr "按 IP 地址固定排序；点击一行查看该主机的当前连接"
+
+msgid "hosts recorded"
+msgstr "台已记录"
+
+msgid "Host"
+msgstr "主机"
+
+msgid "Live download"
+msgstr "实时下载"
+
+msgid "Live upload"
+msgstr "实时上传"
+
+msgid "Downloaded"
+msgstr "累计下载"
+
+msgid "Uploaded"
+msgstr "累计上传"
+
+msgid "Connections"
+msgstr "连接"
+
+msgid "Risk"
+msgstr "风险"
+
+msgid "Current connections"
+msgstr "当前连接"
+
+msgid "active connections"
+msgstr "条活动连接"
+
+msgid "Direction"
+msgstr "方向"
+
+msgid "Source IP"
+msgstr "源 IP"
+
+msgid "Destination IP"
+msgstr "目标 IP"
+
+msgid "Attribution / ASN"
+msgstr "归属 / ASN"
+
+msgid "This host has no active connections"
+msgstr "该主机当前没有活动连接"
+
+msgid "Live bandwidth trend"
+msgstr "实时带宽趋势"
+
+msgid "About the last 10 minutes"
+msgstr "最近约 10 分钟"
+
+msgid "Current download"
+msgstr "当前下载"
+
+msgid "Current upload"
+msgstr "当前上传"
+
+msgid "Total downloaded"
+msgstr "累计下载"
+
+msgid "Total uploaded"
+msgstr "累计上传"
+
+msgid "Active hosts / connections"
+msgstr "活动主机 / 连接"
+
+msgid "Current highest risk"
+msgstr "当前最高风险"
+
+msgid "Flow Insight sections"
+msgstr "流量洞察栏目"
+
+msgid "Live trend"
+msgstr "实时趋势"
+
+msgid "Risk score:"
+msgstr "风险评分说明："
+
+msgid "A score of 0 means the IP was not observed in the loaded datasets; it does not mean safe. The score starts with the most severe evidence, adds 5 for each additional independent source, and is capped at 100. It is only a triage aid and never blocks an IP automatically."
+msgstr "0 分表示未在已加载数据集中观察到，不代表安全。评分以最高严重证据为基准，每个额外独立来源增加 5 分，封顶 100；仅用于排查优先级，不会自动封禁 IP。"
+
+msgid "Data updated:"
+msgstr "数据更新时间："
+
+msgid "Attribution is limited to country/region and ASN, and all lookups run locally on the router."
+msgstr "归属地为国家/地区与 ASN 级别，所有查询均在路由器本地完成。"
+
+msgid "Applying changes restarts the collector. LAN networks determine which host owns each connection."
+msgstr "修改后应用配置会重启采集服务。LAN 网段用于判断每条连接属于哪台内网主机。"
+
+msgid "Collection and storage"
+msgstr "采集与存储"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "LAN networks"
+msgstr "LAN 网段"
+
+msgid "Supports IPv4 and IPv6 CIDRs. Only hosts inside these networks, excluding the router itself, are counted."
+msgstr "支持 IPv4 与 IPv6 CIDR；只累计这些网段内、且不是路由器本机地址的主机。"
+
+msgid "Collection interval"
+msgstr "采集间隔"
+
+msgid "1 second"
+msgstr "1 秒"
+
+msgid "2 seconds (recommended)"
+msgstr "2 秒（推荐）"
+
+msgid "5 seconds"
+msgstr "5 秒"
+
+msgid "Cumulative state save interval"
+msgstr "累计值落盘间隔"
+
+msgid "1 minute"
+msgstr "1 分钟"
+
+msgid "5 minutes (recommended)"
+msgstr "5 分钟（推荐）"
+
+msgid "15 minutes"
+msgstr "15 分钟"
+
+msgid "A shorter interval reduces loss after unexpected power failure but increases flash writes. A normal shutdown saves immediately."
+msgstr "间隔越短，意外断电时丢失越少，但会增加闪存写入。正常停机会立即保存。"
+
+msgid "Maximum connections shown"
+msgstr "页面最大连接数"
+
+msgid "Offline data"
+msgstr "离线数据"
+
+msgid "Automatic updates"
+msgstr "自动更新"
+
+msgid "Update interval"
+msgstr "更新间隔"
+
+msgid "12 hours"
+msgstr "12 小时"
+
+msgid "24 hours (recommended)"
+msgstr "24 小时（推荐）"
+
+msgid "3 days"
+msgstr "3 天"
+
+msgid "7 days"
+msgstr "7 天"
+
+msgid "Datasets are downloaded from public GitHub projects. Connection IPs are never sent to a third-party lookup API."
+msgstr "数据从 GitHub 公开项目下载到本机，连接 IP 不会发送给第三方查询接口。"
+
+msgid "Monitored LAN prefixes:"
+msgstr "正在监测的 LAN 网段："
+
+msgid "Delegated global IPv6 prefixes on LAN interfaces are detected automatically through ubus."
+msgstr "插件会通过 ubus 自动识别下发到 LAN 接口的公网 IPv6 前缀。"

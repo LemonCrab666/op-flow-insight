@@ -1,4 +1,6 @@
 /dist/
 /tests/ui-output/
 /.tools/
+/.cache/
+__pycache__/
 *.tmp

@@ -9,6 +9,29 @@ are therefore published as historical binary archives. GitHub's automatically
 generated “Source code” archives do not represent those older versions.
 Starting with `r5`, release tags correspond to source commits.
 
+## 0.1.1-r6
+
+- Switched the LuCI source and fallback UI to English and adopted LuCI's `_()`
+  translation API throughout.
+- Added the optional `luci-i18n-op-flow-zh-cn` Simplified Chinese package.
+- Added the optional `luci-i18n-op-flow-ja` Japanese package; the default
+  English UI needs no language package.
+- Converted backend health warnings to stable English messages and translated
+  them in the UI.
+- Automatically discovers ISP-delegated global IPv6 prefixes on LAN interfaces
+  through ubus, fixing missing live and cumulative traffic when Speedtest or
+  other traffic uses IPv6; the UI exposes the prefixes currently monitored.
+- Versioned the stylesheet URL, reran layout after stylesheet loading, and
+  added plugin-scoped critical layout protection to prevent stale PC browser
+  CSS and LuCI theme overrides from breaking the page.
+- Increased column space for longer English/Japanese headers and retained
+  contained horizontal scrolling, header/data alignment, blue download, and
+  green upload semantics.
+- Added translation coverage checks and APK/IPK workflow verification for
+  language-package metadata, architecture, and LMO contents.
+- Passed browser layout regression at 2560, 1920, 1280, 768 dark, and 480 dark
+  viewport widths.
+
 ## 0.1.1-r5
 
 - Added a time x-axis, rate y-axis, and adaptive units to the live bandwidth chart.
@@ -49,4 +72,3 @@ Starting with `r5`, release tags correspond to source commits.
 - Added offline country/region and ASN attribution.
 - Added explainable 0–100 IP risk scores based on public GitHub threat datasets.
 - Added LuCI settings, UCI configuration, rpcd ACL, and procd service integration.
-

@@ -1,6 +1,6 @@
 {
 	"admin/status/op-flow": {
-		"title": "流量洞察",
+		"title": "Flow Insight",
 		"order": 35,
 		"action": {
 			"type": "view",
@@ -13,7 +13,7 @@
 		}
 	},
 	"admin/services/op-flow": {
-		"title": "流量洞察设置",
+		"title": "Flow Insight Settings",
 		"order": 90,
 		"action": {
 			"type": "view",
@@ -26,4 +26,3 @@
 		}
 	}
 }
-

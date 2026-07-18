@@ -88,6 +88,7 @@ type Health struct {
 	ConntrackReadable bool     `json:"conntrack_readable"`
 	AccountingEnabled bool     `json:"accounting_enabled"`
 	DestroyEvents     bool     `json:"destroy_events"`
+	LANPrefixes       []string `json:"lan_prefixes,omitempty"`
 	Warnings          []string `json:"warnings,omitempty"`
 }
 

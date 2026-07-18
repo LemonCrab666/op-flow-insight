@@ -11,7 +11,8 @@
 - 按 LAN IP 累计上传与下载字节，正常重启后继续累计。
 - 实时主机速率、总速率、活动连接数和约 10 分钟趋势图。
 - 展示每条当前连接的方向、协议、源 IP/端口、目标 IP/端口。
-- 支持 IPv4、IPv6、普通出站和端口转发（DNAT）入站。
+- 支持 IPv4、IPv6、普通出站和端口转发（DNAT）入站；自动识别 LAN
+  接口上由运营商委派的公网 IPv6 前缀。
 - 自动读取 dnsmasq DHCP lease，显示主机名和 MAC。
 - 自动排除路由器自己的接口地址。
 - 远端 IP 的国家/地区、ASN 与运营组织全部离线查询，不把用户访问的 IP 发给在线查询 API。
@@ -30,24 +31,35 @@
 
 ## 界面语言与语言包
 
-`0.1.1-r1` 至 `r5` 的 LuCI 页面文字是直接写入 JavaScript 的中文，因此安装包目前
-不依赖 `luci-i18n-*` 语言包，但界面也不会随 LuCI 语言自动切换。本仓库的使用说明和
-Release 正文提供中文、英语和日语。
+从 `0.1.1-r6` 开始，界面以英语作为源码默认文字，并使用 LuCI `_()` 翻译接口。
+主程序不强制安装所有语言：
 
-未来若将界面正式国际化，应把英语作为源码默认文字并使用 LuCI 的 `_()` 翻译接口，
-再提供 `zh_Hans` 与 `ja` 的 PO/LMO。推荐把插件翻译做成可选的
-`luci-i18n-op-flow-zh-cn`、`luci-i18n-op-flow-ja` 包，而不是让主程序强制依赖所有
-语言。英语默认界面不需要语言包；若希望整个 LuCI 都显示日语，固件还需要安装其
-LuCI 基础日语包（通常为 `luci-i18n-base-ja`）。
+- 只安装 `op-flow-insight` 时显示英语，不需要英语语言包。
+- 简体中文安装可选包 `luci-i18n-op-flow-zh-cn`。
+- 日语安装可选包 `luci-i18n-op-flow-ja`。
+
+语言包必须与主程序使用相同版本。`r1` 至 `r5` 的页面是硬编码中文，不能通过安装
+`r6` 语言包翻译；要使用英语或日语界面，需要同时升级到 `r6` 主程序。若希望整个
+LuCI 都显示日语，固件还需要 LuCI 基础日语包（通常为 `luci-i18n-base-ja`）。
 
 ## 安装
 
 从构建产物取得 `op-flow-insight-<版本>-r<修订>.apk`，上传到路由器后安装。自行构建的包没有加入 OpenWrt 官方签名仓库，因此需要显式允许本地未受信任包：
 
 ```sh
-apk add --allow-untrusted ./op-flow-insight-0.1.1-r5.apk
+apk add --allow-untrusted ./op-flow-insight-0.1.1-r6.apk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
+```
+
+根据 LuCI 当前语言，再安装一个可选语言包：
+
+```sh
+# 简体中文
+apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r6.apk
+
+# 日语
+apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r6.apk
 ```
 
 然后打开 LuCI 的“状态 → 流量洞察”。首次安装后可点击“更新数据集”，也可在 SSH 中同步执行：
@@ -68,7 +80,10 @@ logread -e op-flow
 24.10.x 仍使用 opkg/IPK。上传 IPK 后安装：
 
 ```sh
-opkg install ./op-flow-insight_0.1.1-r5_x86_64.ipk
+opkg install ./op-flow-insight_0.1.1-r6_x86_64.ipk
+# 可选：简体中文或日语，二选一
+opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r6_all.ipk
+# opkg install ./luci-i18n-op-flow-ja_0.1.1-r6_all.ipk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```

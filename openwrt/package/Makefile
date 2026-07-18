@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=op-flow-insight
 PKG_VERSION:=0.1.1
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
@@ -17,7 +17,7 @@ define Package/op-flow-insight
   SUBMENU:=3. Applications
   TITLE:=Per-host traffic and offline IP risk insight
   URL:=https://github.com/op-flow-insight/op-flow-insight
-  DEPENDS:=@TARGET_x86_64 +ca-bundle +rpcd +jsonfilter +luci-base
+  DEPENDS:=@TARGET_x86_64 +ca-bundle +ubus +rpcd +jsonfilter +luci-base
 endef
 
 define Package/op-flow-insight/description
@@ -26,10 +26,30 @@ define Package/op-flow-insight/description
   0-100 IP risk evidence.
 endef
 
+define Package/luci-i18n-op-flow-zh-cn
+  SECTION:=luci
+  CATEGORY:=LuCI
+  TITLE:=OP Flow Insight - Simplified Chinese translation
+  DEPENDS:=+op-flow-insight
+  PKGARCH:=all
+  HIDDEN:=1
+endef
+
+define Package/luci-i18n-op-flow-ja
+  SECTION:=luci
+  CATEGORY:=LuCI
+  TITLE:=OP Flow Insight - Japanese translation
+  DEPENDS:=+op-flow-insight
+  PKGARCH:=all
+  HIDDEN:=1
+endef
+
 define Package/op-flow-insight/conffiles
 /etc/config/op-flow
 endef
 
+# The build scripts cross-compile the static Go daemon before invoking the SDK.
+# There is intentionally no target-side source tree or makefile to compile.
 define Build/Compile
 endef
 
@@ -71,10 +91,50 @@ define Package/op-flow-insight/install
 		$(1)/lib/upgrade/keep.d/op-flow
 endef
 
+define Package/luci-i18n-op-flow-zh-cn/install
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
+	$(INSTALL_DATA) ./files/op-flow.zh-cn.lmo \
+		$(1)/usr/lib/lua/luci/i18n/op-flow.zh-cn.lmo
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	echo "uci set luci.languages.zh_cn='简体中文 (Simplified Chinese)'; uci commit luci" \
+		> $(1)/etc/uci-defaults/luci-i18n-op-flow-zh-cn
+	chmod 0755 $(1)/etc/uci-defaults/luci-i18n-op-flow-zh-cn
+endef
+
+define Package/luci-i18n-op-flow-ja/install
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
+	$(INSTALL_DATA) ./files/op-flow.ja.lmo \
+		$(1)/usr/lib/lua/luci/i18n/op-flow.ja.lmo
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	echo "uci set luci.languages.ja='日本語 (Japanese)'; uci commit luci" \
+		> $(1)/etc/uci-defaults/luci-i18n-op-flow-ja
+	chmod 0755 $(1)/etc/uci-defaults/luci-i18n-op-flow-ja
+endef
+
 define Package/op-flow-insight/postinst
 #!/bin/sh
 [ -n "$$IPKG_INSTROOT" ] && exit 0
+rm -f /tmp/luci-indexcache.*
+rm -rf /tmp/luci-modulecache/
 /etc/init.d/rpcd restart >/dev/null 2>&1 || true
+exit 0
+endef
+
+define Package/luci-i18n-op-flow-zh-cn/postinst
+#!/bin/sh
+[ -n "$$IPKG_INSTROOT" ] && exit 0
+rm -f /tmp/luci-indexcache.*
+rm -rf /tmp/luci-modulecache/
+/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+exit 0
+endef
+
+define Package/luci-i18n-op-flow-ja/postinst
+#!/bin/sh
+[ -n "$$IPKG_INSTROOT" ] && exit 0
+rm -f /tmp/luci-indexcache.*
+rm -rf /tmp/luci-modulecache/
+/etc/init.d/rpcd reload >/dev/null 2>&1 || true
 exit 0
 endef
 
@@ -86,3 +146,5 @@ exit 0
 endef
 
 $(eval $(call BuildPackage,op-flow-insight))
+$(eval $(call BuildPackage,luci-i18n-op-flow-zh-cn))
+$(eval $(call BuildPackage,luci-i18n-op-flow-ja))

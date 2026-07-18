@@ -8,7 +8,9 @@ fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SDK="$(cd "$1" && pwd)"
-VERSION="$(sed -n 's/^PKG_VERSION:=//p' "$ROOT/openwrt/package/Makefile")"
+PACKAGE_VERSION="$(sed -n 's/^PKG_VERSION:=//p' "$ROOT/openwrt/package/Makefile")"
+PACKAGE_RELEASE="$(sed -n 's/^PKG_RELEASE:=//p' "$ROOT/openwrt/package/Makefile")"
+VERSION="${PACKAGE_VERSION}-r${PACKAGE_RELEASE}"
 PACKAGE_DIR="$SDK/package/op-flow-insight"
 
 if [[ ! -f "$SDK/Makefile" ]]; then
@@ -17,10 +19,18 @@ if [[ ! -f "$SDK/Makefile" ]]; then
 fi
 
 mkdir -p "$ROOT/dist/bin"
+mkdir -p "$ROOT/dist/i18n"
+python3 "$ROOT/scripts/po2lmo.py" \
+	"$ROOT/openwrt/package/po/zh_Hans/op-flow.po" \
+	"$ROOT/dist/i18n/op-flow.zh-cn.lmo"
+python3 "$ROOT/scripts/po2lmo.py" \
+	"$ROOT/openwrt/package/po/ja/op-flow.po" \
+	"$ROOT/dist/i18n/op-flow.ja.lmo"
 (
 	cd "$ROOT"
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-		go build -trimpath -ldflags="-s -w -X main.version=$VERSION" \
+		go build -buildvcs=false -trimpath \
+		-ldflags="-s -w -X main.version=$VERSION" \
 		-o "$ROOT/dist/bin/op-flowd-linux-amd64" ./cmd/op-flowd
 )
 
@@ -28,29 +38,42 @@ rm -rf "$PACKAGE_DIR"
 mkdir -p "$PACKAGE_DIR/files"
 cp "$ROOT/openwrt/package/Makefile" "$PACKAGE_DIR/Makefile"
 cp -a "$ROOT/openwrt/rootfs" "$PACKAGE_DIR/files/rootfs"
+cp -a "$ROOT/openwrt/package/po" "$PACKAGE_DIR/po"
+cp "$ROOT/dist/i18n/op-flow.zh-cn.lmo" "$PACKAGE_DIR/files/op-flow.zh-cn.lmo"
+cp "$ROOT/dist/i18n/op-flow.ja.lmo" "$PACKAGE_DIR/files/op-flow.ja.lmo"
 cp "$ROOT/dist/bin/op-flowd-linux-amd64" "$PACKAGE_DIR/files/op-flowd"
 cp "$ROOT/LICENSE" "$PACKAGE_DIR/LICENSE"
 
 if [[ -d "$SDK/bin" ]]; then
-	find "$SDK/bin" -type f -name 'op-flow-insight_*.ipk' -delete
+	find "$SDK/bin" -type f \
+		\( -name 'op-flow-insight_*.ipk' -o -name 'luci-i18n-op-flow-*.ipk' \) \
+		-delete
 fi
 make -C "$SDK" defconfig
 make -C "$SDK" package/op-flow-insight/clean
-make -C "$SDK" package/op-flow-insight/compile V=s -j"$(nproc)"
+make -C "$SDK" package/op-flow-insight/compile V=s -j"$(nproc)" \
+	CONFIG_PACKAGE_luci-i18n-op-flow-zh-cn=m \
+	CONFIG_PACKAGE_luci-i18n-op-flow-ja=m
 
 mkdir -p "$ROOT/dist"
-find "$ROOT/dist" -maxdepth 1 -type f -name 'op-flow-insight_*.ipk*' -delete
-find "$SDK/bin" -type f -name 'op-flow-insight_*.ipk' -exec cp -v {} "$ROOT/dist/" \;
+find "$ROOT/dist" -maxdepth 1 -type f \
+	\( -name 'op-flow-insight_*.ipk*' -o -name 'luci-i18n-op-flow-*.ipk*' \) \
+	-delete
+find "$SDK/bin" -type f \
+	\( -name 'op-flow-insight_*.ipk' -o -name 'luci-i18n-op-flow-*.ipk' \) \
+	-exec cp -v {} "$ROOT/dist/" \;
 
-IPK="$(find "$ROOT/dist" -maxdepth 1 -type f -name 'op-flow-insight_*.ipk' | sort | tail -n 1)"
-if [[ -z "$IPK" ]]; then
+CORE_IPK="$(find "$ROOT/dist" -maxdepth 1 -type f -name 'op-flow-insight_*.ipk' | sort | tail -n 1)"
+if [[ -z "$CORE_IPK" ]]; then
 	echo "ImmortalWrt/OpenWrt SDK completed without producing an IPK" >&2
 	exit 1
 fi
 
-(
-	cd "$(dirname "$IPK")"
-	sha256sum "$(basename "$IPK")" > "$(basename "$IPK").sha256"
-)
-
-printf 'built %s\n' "$IPK"
+while IFS= read -r IPK; do
+	(
+		cd "$(dirname "$IPK")"
+		sha256sum "$(basename "$IPK")" > "$(basename "$IPK").sha256"
+	)
+	printf 'built %s\n' "$IPK"
+done < <(find "$ROOT/dist" -maxdepth 1 -type f \
+	\( -name 'op-flow-insight_*.ipk' -o -name 'luci-i18n-op-flow-*.ipk' \) | sort)

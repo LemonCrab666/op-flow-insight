@@ -1,0 +1,282 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: op-flow-insight 0.1.1-r6\n"
+"Language: ja\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Flow Insight"
+msgstr "トラフィック分析"
+
+msgid "Flow Insight Settings"
+msgstr "トラフィック分析設定"
+
+msgid "Not found in the loaded datasets; this does not mean the IP is known to be safe"
+msgstr "読み込み済みデータセットでは未検出です。この IP の安全性が確認済みという意味ではありません"
+
+msgid "LAN"
+msgstr "LAN"
+
+msgid "Cumulative state file is damaged; restarted from current connections: "
+msgstr "累積状態ファイルが破損しているため、現在の接続から再開しました："
+
+msgid "Unable to read conntrack: "
+msgstr "conntrack を読み取れません："
+
+msgid "Unable to detect LAN prefixes through ubus; using configured prefixes: "
+msgstr "ubus で LAN プレフィックスを検出できないため、設定済みのプレフィックスを使用します："
+
+msgid "Conntrack byte counters are unavailable; enable net.netfilter.nf_conntrack_acct=1 and establish new connections"
+msgstr "conntrack のバイトカウンターがありません。net.netfilter.nf_conntrack_acct=1 を有効にしてから新しい接続を開始してください"
+
+msgid "Conntrack destroy events are unavailable; very short connections may be undercounted: "
+msgstr "conntrack destroy イベントを利用できないため、非常に短い接続を過少計上する可能性があります："
+
+msgid "Failed to save cumulative state: "
+msgstr "累積状態を保存できません："
+
+msgid "The trend appears after several samples are collected"
+msgstr "複数のサンプルを収集すると推移を表示します"
+
+msgid "About 10 minutes ago"
+msgstr "約 10 分前"
+
+msgid "About 5 minutes ago"
+msgstr "約 5 分前"
+
+msgid "Now"
+msgstr "現在"
+
+msgid "Rate"
+msgstr "速度"
+
+msgid "Live upload and download bandwidth trend with time on the horizontal axis and rate on the vertical axis"
+msgstr "横軸を時間、縦軸を速度としたリアルタイム上下帯域の推移"
+
+msgid "Time"
+msgstr "時間"
+
+msgid "Download"
+msgstr "ダウンロード"
+
+msgid "Upload"
+msgstr "アップロード"
+
+msgid "Peak"
+msgstr "ピーク"
+
+msgid "Unnamed host"
+msgstr "名前のないホスト"
+
+msgid "No LAN host connections have been observed yet"
+msgstr "LAN ホストの接続はまだ観測されていません"
+
+msgid "View current connections for"
+msgstr "現在の接続を表示："
+
+msgid "Click to view current connections for this host"
+msgstr "クリックすると、このホストの現在の接続を表示します"
+
+msgid "There are no active connections to display"
+msgstr "表示できるアクティブな接続はありません"
+
+msgid "Inbound"
+msgstr "内向き"
+
+msgid "Outbound"
+msgstr "外向き"
+
+msgid "Unable to connect to the backend service:"
+msgstr "バックエンドサービスへ接続できません："
+
+msgid "Make sure the op-flow service is running"
+msgstr "op-flow サービスが起動していることを確認してください"
+
+msgid "The offline attribution and risk database is not loaded. Click \"Update datasets\"; traffic accounting continues to work during the update."
+msgstr "オフライン帰属・リスクデータベースが読み込まれていません。「データセットを更新」をクリックしてください。更新中も通信量の集計は継続します。"
+
+msgid "Never updated"
+msgstr "未更新"
+
+msgid "Cumulative LAN-host usage, live connections, and offline IP risk evidence"
+msgstr "LAN ホスト別累積通信量、リアルタイム接続、オフライン IP リスク根拠"
+
+msgid "Refreshes every 2 seconds"
+msgstr "2 秒ごとに更新"
+
+msgid "Dataset update started in the background."
+msgstr "バックグラウンドでデータセットの更新を開始しました。"
+
+msgid "Updating…"
+msgstr "更新中…"
+
+msgid "Update datasets"
+msgstr "データセットを更新"
+
+msgid "LAN hosts"
+msgstr "LAN ホスト"
+
+msgid "Sorted by IP address; click a row to view the host's current connections"
+msgstr "IP アドレス順で固定表示します。行をクリックすると、そのホストの現在の接続を表示します"
+
+msgid "hosts recorded"
+msgstr "台を記録"
+
+msgid "Host"
+msgstr "ホスト"
+
+msgid "Live download"
+msgstr "現在のダウンロード"
+
+msgid "Live upload"
+msgstr "現在のアップロード"
+
+msgid "Downloaded"
+msgstr "累積ダウンロード"
+
+msgid "Uploaded"
+msgstr "累積アップロード"
+
+msgid "Connections"
+msgstr "接続"
+
+msgid "Risk"
+msgstr "リスク"
+
+msgid "Current connections"
+msgstr "現在の接続"
+
+msgid "active connections"
+msgstr "件のアクティブ接続"
+
+msgid "Direction"
+msgstr "方向"
+
+msgid "Source IP"
+msgstr "送信元 IP"
+
+msgid "Destination IP"
+msgstr "宛先 IP"
+
+msgid "Attribution / ASN"
+msgstr "帰属 / ASN"
+
+msgid "This host has no active connections"
+msgstr "このホストには現在アクティブな接続がありません"
+
+msgid "Live bandwidth trend"
+msgstr "リアルタイム帯域推移"
+
+msgid "About the last 10 minutes"
+msgstr "直近約 10 分"
+
+msgid "Current download"
+msgstr "現在のダウンロード"
+
+msgid "Current upload"
+msgstr "現在のアップロード"
+
+msgid "Total downloaded"
+msgstr "累積ダウンロード"
+
+msgid "Total uploaded"
+msgstr "累積アップロード"
+
+msgid "Active hosts / connections"
+msgstr "アクティブホスト / 接続"
+
+msgid "Current highest risk"
+msgstr "現在の最高リスク"
+
+msgid "Flow Insight sections"
+msgstr "トラフィック分析セクション"
+
+msgid "Live trend"
+msgstr "リアルタイム推移"
+
+msgid "Risk score:"
+msgstr "リスクスコア："
+
+msgid "A score of 0 means the IP was not observed in the loaded datasets; it does not mean safe. The score starts with the most severe evidence, adds 5 for each additional independent source, and is capped at 100. It is only a triage aid and never blocks an IP automatically."
+msgstr "0 点は読み込み済みデータセットで未検出という意味であり、安全性を示すものではありません。最も重大な根拠を基準とし、独立した追加ソースごとに 5 点を加算して上限を 100 とします。調査の優先順位付け専用で、IP を自動遮断しません。"
+
+msgid "Data updated:"
+msgstr "データ更新日時："
+
+msgid "Attribution is limited to country/region and ASN, and all lookups run locally on the router."
+msgstr "帰属情報は国・地域と ASN までで、すべての検索はルーター上でローカルに実行されます。"
+
+msgid "Applying changes restarts the collector. LAN networks determine which host owns each connection."
+msgstr "変更を適用すると収集サービスを再起動します。LAN ネットワークは各接続をどのホストへ割り当てるかの判定に使用します。"
+
+msgid "Collection and storage"
+msgstr "収集と保存"
+
+msgid "Enable"
+msgstr "有効"
+
+msgid "LAN networks"
+msgstr "LAN ネットワーク"
+
+msgid "Supports IPv4 and IPv6 CIDRs. Only hosts inside these networks, excluding the router itself, are counted."
+msgstr "IPv4 と IPv6 の CIDR に対応します。ルーター自身を除き、指定ネットワーク内のホストだけを集計します。"
+
+msgid "Collection interval"
+msgstr "収集間隔"
+
+msgid "1 second"
+msgstr "1 秒"
+
+msgid "2 seconds (recommended)"
+msgstr "2 秒（推奨）"
+
+msgid "5 seconds"
+msgstr "5 秒"
+
+msgid "Cumulative state save interval"
+msgstr "累積状態の保存間隔"
+
+msgid "1 minute"
+msgstr "1 分"
+
+msgid "5 minutes (recommended)"
+msgstr "5 分（推奨）"
+
+msgid "15 minutes"
+msgstr "15 分"
+
+msgid "A shorter interval reduces loss after unexpected power failure but increases flash writes. A normal shutdown saves immediately."
+msgstr "間隔を短くすると予期しない電源断時の損失を減らせますが、フラッシュへの書き込みが増えます。通常停止時は直ちに保存します。"
+
+msgid "Maximum connections shown"
+msgstr "画面に表示する最大接続数"
+
+msgid "Offline data"
+msgstr "オフラインデータ"
+
+msgid "Automatic updates"
+msgstr "自動更新"
+
+msgid "Update interval"
+msgstr "更新間隔"
+
+msgid "12 hours"
+msgstr "12 時間"
+
+msgid "24 hours (recommended)"
+msgstr "24 時間（推奨）"
+
+msgid "3 days"
+msgstr "3 日"
+
+msgid "7 days"
+msgstr "7 日"
+
+msgid "Datasets are downloaded from public GitHub projects. Connection IPs are never sent to a third-party lookup API."
+msgstr "データセットは GitHub の公開プロジェクトからルーターへダウンロードします。接続先 IP を第三者の検索 API へ送信することはありません。"
+
+msgid "Monitored LAN prefixes:"
+msgstr "監視対象の LAN プレフィックス："
+
+msgid "Delegated global IPv6 prefixes on LAN interfaces are detected automatically through ubus."
+msgstr "LAN インターフェースへ委任されたグローバル IPv6 プレフィックスを ubus で自動検出します。"

@@ -19,7 +19,8 @@ explainable 0–100 risk score for remote IP addresses.
   ten-minute trend chart.
 - Direction, protocol, source IP/port, and destination IP/port for each active
   connection.
-- IPv4, IPv6, ordinary outbound traffic, and inbound port forwarding (DNAT).
+- IPv4, IPv6, ordinary outbound traffic, and inbound port forwarding (DNAT),
+  including automatic discovery of ISP-delegated global IPv6 prefixes on LAN.
 - Host names and MAC addresses read automatically from dnsmasq DHCP leases.
 - Automatic exclusion of the router's own interface addresses.
 - Fully offline country/region, ASN, and network organization lookup for remote
@@ -45,19 +46,20 @@ small/medium networks; it is not a carrier-grade billing system.
 
 ## UI language and language packages
 
-In releases `0.1.1-r1` through `r5`, LuCI text is hard-coded in Chinese
-JavaScript strings. The package therefore has no `luci-i18n-*` dependency, but
-the UI does not yet follow the selected LuCI language. The repository
-documentation and GitHub Release notes are available in Chinese, English, and
-Japanese.
+Starting with `0.1.1-r6`, English is the source and fallback UI language and
+all interface strings use LuCI's `_()` translation API. The core package does
+not force every translation to be installed:
 
-For a future localized UI, English should be used as the source language with
-LuCI's `_()` translation API, followed by `zh_Hans` and `ja` PO/LMO catalogs.
-The recommended layout is to provide optional
-`luci-i18n-op-flow-zh-cn` and `luci-i18n-op-flow-ja` packages instead of making
-the core package depend on every language. The English source UI needs no
-language package. To display all of LuCI in Japanese, the firmware also needs
-the LuCI base Japanese translation package, usually `luci-i18n-base-ja`.
+- The `op-flow-insight` package alone displays English; no English language
+  package is needed.
+- Install `luci-i18n-op-flow-zh-cn` for Simplified Chinese.
+- Install `luci-i18n-op-flow-ja` for Japanese.
+
+The translation package must match the core package version. Releases `r1`
+through `r5` contain hard-coded Chinese strings and cannot be translated by an
+`r6` language package; upgrade the core package to `r6` for English or
+Japanese. To display all of LuCI in Japanese, the firmware also needs the LuCI
+base Japanese translation package, usually `luci-i18n-base-ja`.
 
 ## Installation
 
@@ -66,9 +68,19 @@ and install it. Locally built packages are not signed by the official OpenWrt
 repository, so installation must explicitly allow an untrusted local package:
 
 ```sh
-apk add --allow-untrusted ./op-flow-insight-0.1.1-r5.apk
+apk add --allow-untrusted ./op-flow-insight-0.1.1-r6.apk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
+```
+
+Install one optional translation package for the selected LuCI language:
+
+```sh
+# Simplified Chinese
+apk add --allow-untrusted ./luci-i18n-op-flow-zh-cn-0.1.1-r6.apk
+
+# Japanese
+apk add --allow-untrusted ./luci-i18n-op-flow-ja-0.1.1-r6.apk
 ```
 
 Open **Status → Flow Insight** in LuCI. After the first installation, click
@@ -90,7 +102,10 @@ logread -e op-flow
 ImmortalWrt 24.10.x still uses opkg/IPK:
 
 ```sh
-opkg install ./op-flow-insight_0.1.1-r5_x86_64.ipk
+opkg install ./op-flow-insight_0.1.1-r6_x86_64.ipk
+# Optional: choose Simplified Chinese or Japanese
+opkg install ./luci-i18n-op-flow-zh-cn_0.1.1-r6_all.ipk
+# opkg install ./luci-i18n-op-flow-ja_0.1.1-r6_all.ipk
 /etc/init.d/op-flow enable
 /etc/init.d/op-flow restart
 ```
@@ -207,4 +222,3 @@ The configuration file is `/etc/config/op-flow`.
   data. Confirm findings against local logs.
 - CDN, cloud, and shared-hosting addresses are reused. A risk score must not be
   attributed directly to the current visitor.
-

@@ -26,7 +26,7 @@ foreach ($case in $cases) {
 	$stdout = Join-Path $outputDirectory "$name.html"
 	$stderr = Join-Path $outputDirectory "$name.err"
 	$screenshot = Join-Path $outputDirectory "$name.png"
-	$profile = Join-Path $env:TEMP "op-flow-ui-$name"
+	$profile = Join-Path $env:TEMP "op-flow-ui-$name-$PID"
 	$url = "http://127.0.0.1:8765/tests/ui-runtime.html?dark=$($case.Dark)"
 	$arguments = @(
 		'--headless=new',
