@@ -156,8 +156,17 @@ jobs:
         run: |
           NOTES=".github/release-notes/${GITHUB_REF_NAME}.md"
           test -f "$NOTES"
-          gh release create "$GITHUB_REF_NAME" \
-            release-files/* \
-            --title "OP Flow Insight ${GITHUB_REF_NAME#v}" \
-            --notes-file "$NOTES" \
-            --verify-tag
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-files/* --clobber
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "OP Flow Insight ${GITHUB_REF_NAME#v}" \
+              --notes-file "$NOTES" \
+              --latest
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              release-files/* \
+              --title "OP Flow Insight ${GITHUB_REF_NAME#v}" \
+              --notes-file "$NOTES" \
+              --verify-tag \
+              --latest
+          fi
