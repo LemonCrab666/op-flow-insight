@@ -30,6 +30,20 @@ explainable 0–100 risk score for remote IP addresses.
 - A single CGO-free Go binary. The native APK v3 package is produced with the
   official ImmortalWrt 25.12.0 SDK.
 
+## Screenshots
+
+### Live bandwidth trend
+
+![OP Flow Insight live bandwidth trend](docs/screenshots/live-trend.png)
+
+### LAN host traffic
+
+![OP Flow Insight LAN host traffic](docs/screenshots/lan-hosts.png)
+
+### Current connections and IP attribution
+
+![OP Flow Insight current connections and IP attribution](docs/screenshots/current-connections.png)
+
 ## Supported environment
 
 - ImmortalWrt 25.12.0, target `x86/64`, package architecture `x86_64`.

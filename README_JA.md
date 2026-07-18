@@ -27,6 +27,20 @@ OP Flow Insight は ImmortalWrt 25.12.0 x86_64 向けの LuCI
 - CGO を使用しない単一の Go バイナリ。公式 ImmortalWrt 25.12.0 SDK で
   ネイティブ APK v3 を生成。
 
+## 画面イメージ
+
+### リアルタイム帯域推移
+
+![OP Flow Insight リアルタイム帯域推移](docs/screenshots/live-trend.png)
+
+### LAN ホストの通信量
+
+![OP Flow Insight LAN ホストの通信量](docs/screenshots/lan-hosts.png)
+
+### 現在の接続と IP 所属情報
+
+![OP Flow Insight 現在の接続と IP 所属情報](docs/screenshots/current-connections.png)
+
 ## 対応環境
 
 - ImmortalWrt 25.12.0、ターゲット `x86/64`、パッケージアーキテクチャ `x86_64`。

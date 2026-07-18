@@ -19,6 +19,20 @@
 - 多来源风险证据和可解释的 0–100 分；只提示，不自动封禁。
 - 单一、无 CGO 的 Go 二进制；使用 ImmortalWrt 25.12.0 官方 SDK 生成原生 APK v3 安装包。
 
+## 界面预览
+
+### 实时带宽趋势
+
+![OP Flow Insight 实时带宽趋势](docs/screenshots/live-trend.png)
+
+### 内网主机流量
+
+![OP Flow Insight 内网主机流量](docs/screenshots/lan-hosts.png)
+
+### 当前连接与 IP 归属
+
+![OP Flow Insight 当前连接与 IP 归属](docs/screenshots/current-connections.png)
+
 ## 支持环境
 
 - ImmortalWrt 25.12.0，目标 `x86/64`、软件包架构 `x86_64`。
