@@ -72,6 +72,68 @@ jobs:
             dist/bin/op-flowd-linux-amd64
           if-no-files-found: error
 
+  test-and-package-immortalwrt-25-aarch64:
+    runs-on: ubuntu-latest
+    env:
+      IMMORTALWRT_VERSION: "25.12.0"
+      IMMORTALWRT_SDK: "immortalwrt-sdk-25.12.0-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
+      IMMORTALWRT_SDK_SHA256: "befa29f07c7922876c875d53df753d5d7c2fe2ba4b15fb40c13a2ab38587f6c3"
+      GOARCH: "arm64"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Check translations
+        run: python3 scripts/check-translations.py
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Download verified ImmortalWrt 25.12.0 aarch64 SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bison build-essential clang flex g++ gawk gcc-multilib gettext \
+            libncurses-dev libssl-dev python3-setuptools rsync swig unzip \
+            zlib1g-dev zstd
+          curl -fL \
+            "https://downloads.immortalwrt.org/releases/${IMMORTALWRT_VERSION}/targets/mediatek/filogic/${IMMORTALWRT_SDK}" \
+            -o "/tmp/${IMMORTALWRT_SDK}"
+          echo "${IMMORTALWRT_SDK_SHA256}  /tmp/${IMMORTALWRT_SDK}" | sha256sum -c -
+          mkdir -p /tmp/immortalwrt-sdk
+          tar --zstd -xf "/tmp/${IMMORTALWRT_SDK}" \
+            -C /tmp/immortalwrt-sdk --strip-components=1
+      - name: Build native ImmortalWrt APK v3
+        run: GOARCH=${GOARCH} bash ./scripts/build-apk.sh /tmp/immortalwrt-sdk
+      - name: Verify APK metadata
+        run: |
+          APK="$(find dist -maxdepth 1 -type f -name 'op-flow-insight-*.apk' | head -n 1)"
+          test -n "$APK"
+          test "$(dd if="$APK" bs=4 count=1 status=none)" = "ADBd"
+          /tmp/immortalwrt-sdk/staging_dir/host/bin/apk adbdump --format json "$APK" \
+            | tee "$APK.metadata.json"
+          grep -q '"op-flow-insight"' "$APK.metadata.json"
+          grep -q '"aarch64_cortex-a53"' "$APK.metadata.json"
+          for NAME in luci-i18n-op-flow-zh-cn luci-i18n-op-flow-ja; do
+            TRANSLATION="$(find dist -maxdepth 1 -type f -name "${NAME}-*.apk" | head -n 1)"
+            test -n "$TRANSLATION"
+            /tmp/immortalwrt-sdk/staging_dir/host/bin/apk adbdump \
+              --format json "$TRANSLATION" \
+              | tee "$TRANSLATION.metadata.json"
+            grep -q "\"$NAME\"" "$TRANSLATION.metadata.json"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: op-flow-insight-immortalwrt-25.12.0-aarch64_cortex-a53-apk
+          path: |
+            dist/*.apk
+            dist/*.metadata.json
+            dist/*.sha256
+            dist/bin/op-flowd-linux-arm64
+          if-no-files-found: error
+
   test-and-package-immortalwrt-24:
     runs-on: ubuntu-latest
     env:
@@ -145,6 +207,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - test-and-package-immortalwrt-25
+      - test-and-package-immortalwrt-25-aarch64
       - test-and-package-immortalwrt-24
     runs-on: ubuntu-latest
     permissions:

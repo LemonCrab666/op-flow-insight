@@ -28,10 +28,10 @@ python3 "$ROOT/scripts/po2lmo.py" \
 	"$ROOT/dist/i18n/op-flow.ja.lmo"
 (
 	cd "$ROOT"
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+	CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH:-amd64} \
 		go build -buildvcs=false -trimpath \
 		-ldflags="-s -w -X main.version=$VERSION" \
-		-o "$ROOT/dist/bin/op-flowd-linux-amd64" ./cmd/op-flowd
+		-o "$ROOT/dist/bin/op-flowd-linux-${GOARCH:-amd64}" ./cmd/op-flowd
 )
 
 rm -rf "$PACKAGE_DIR"
