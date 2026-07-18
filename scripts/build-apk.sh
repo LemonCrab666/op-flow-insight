@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-	echo "usage: $0 /path/to/immortalwrt-25.12.0-x86_64-sdk" >&2
+	echo "usage: $0 /path/to/immortalwrt-sdk" >&2
 	exit 2
 fi
 
@@ -41,7 +41,7 @@ cp -a "$ROOT/openwrt/rootfs" "$PACKAGE_DIR/files/rootfs"
 cp -a "$ROOT/openwrt/package/po" "$PACKAGE_DIR/po"
 cp "$ROOT/dist/i18n/op-flow.zh-cn.lmo" "$PACKAGE_DIR/files/op-flow.zh-cn.lmo"
 cp "$ROOT/dist/i18n/op-flow.ja.lmo" "$PACKAGE_DIR/files/op-flow.ja.lmo"
-cp "$ROOT/dist/bin/op-flowd-linux-amd64" "$PACKAGE_DIR/files/op-flowd"
+cp "$ROOT/dist/bin/op-flowd-linux-${GOARCH:-amd64}" "$PACKAGE_DIR/files/op-flowd"
 cp "$ROOT/LICENSE" "$PACKAGE_DIR/LICENSE"
 
 if [[ -d "$SDK/bin" ]]; then
