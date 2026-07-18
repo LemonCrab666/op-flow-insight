@@ -28,10 +28,10 @@ python3 "$ROOT/scripts/po2lmo.py" \
 	"$ROOT/dist/i18n/op-flow.ja.lmo"
 (
 	cd "$ROOT"
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+	CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH:-amd64} \
 		go build -buildvcs=false -trimpath \
 		-ldflags="-s -w -X main.version=$VERSION" \
-		-o "$ROOT/dist/bin/op-flowd-linux-amd64" ./cmd/op-flowd
+		-o "$ROOT/dist/bin/op-flowd-linux-${GOARCH:-amd64}" ./cmd/op-flowd
 )
 
 rm -rf "$PACKAGE_DIR"
@@ -41,7 +41,7 @@ cp -a "$ROOT/openwrt/rootfs" "$PACKAGE_DIR/files/rootfs"
 cp -a "$ROOT/openwrt/package/po" "$PACKAGE_DIR/po"
 cp "$ROOT/dist/i18n/op-flow.zh-cn.lmo" "$PACKAGE_DIR/files/op-flow.zh-cn.lmo"
 cp "$ROOT/dist/i18n/op-flow.ja.lmo" "$PACKAGE_DIR/files/op-flow.ja.lmo"
-cp "$ROOT/dist/bin/op-flowd-linux-amd64" "$PACKAGE_DIR/files/op-flowd"
+cp "$ROOT/dist/bin/op-flowd-linux-${GOARCH:-amd64}" "$PACKAGE_DIR/files/op-flowd"
 cp "$ROOT/LICENSE" "$PACKAGE_DIR/LICENSE"
 
 if [[ -d "$SDK/bin" ]]; then
