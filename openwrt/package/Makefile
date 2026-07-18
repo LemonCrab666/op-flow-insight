@@ -17,7 +17,7 @@ define Package/op-flow-insight
   SUBMENU:=3. Applications
   TITLE:=Per-host traffic and offline IP risk insight
   URL:=https://github.com/op-flow-insight/op-flow-insight
-  DEPENDS:=@TARGET_x86_64 +ca-bundle +ubus +rpcd +jsonfilter +luci-base
+  DEPENDS:=+ca-bundle +ubus +rpcd +jsonfilter +luci-base
 endef
 
 define Package/op-flow-insight/description

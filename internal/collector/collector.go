@@ -16,6 +16,7 @@ import (
 	"github.com/op-flow-insight/op-flow-insight/internal/conntrack"
 	"github.com/op-flow-insight/op-flow-insight/internal/dataset"
 	"github.com/op-flow-insight/op-flow-insight/internal/model"
+	"github.com/op-flow-insight/op-flow-insight/internal/nss"
 	"github.com/op-flow-insight/op-flow-insight/internal/store"
 )
 
@@ -39,6 +40,15 @@ type Tracker struct {
 	lastPrefixRead time.Time
 	version        string
 	lastSaveError  string
+
+	// NSS hardware offload tracking
+	nssPrev map[string]nssEntry
+}
+
+type nssEntry struct {
+	Bytes   uint64
+	Packets uint64
+	Seen    bool
 }
 
 type lease struct {
@@ -61,6 +71,7 @@ func New(cfg config.Config, data *dataset.Manager, version string) (*Tracker, er
 		history: persisted.History,
 		health: model.Health{
 			ConntrackReadable: false,
+			NSSReadable:       false,
 			AccountingEnabled: false,
 		},
 		started:     time.Now().UTC(),
@@ -68,6 +79,7 @@ func New(cfg config.Config, data *dataset.Manager, version string) (*Tracker, er
 		localAddrs:  localInterfaceAddrs(),
 		lanPrefixes: append([]netip.Prefix(nil), cfg.LANPrefixes...),
 		version:     version,
+		nssPrev:     make(map[string]nssEntry),
 	}
 	if err != nil {
 		tracker.health.Warnings = append(tracker.health.Warnings,
@@ -109,6 +121,9 @@ func (t *Tracker) pollFile(now time.Time) {
 	}
 	defer f.Close()
 	t.Poll(f, now)
+
+	// Read NSS hardware counters (MT7986A / MediaTek PPE)
+	t.pollNSS(now)
 }
 
 // Poll is exported to make the accounting logic testable with captured,
@@ -526,4 +541,83 @@ func (t *Tracker) DebugSummary() string {
 		len(snapshot.Hosts), len(snapshot.Flows),
 		snapshot.Totals.Uploaded, snapshot.Totals.Downloaded,
 	)
+}
+
+func (t *Tracker) pollNSS(now time.Time) {
+	elapsed := t.cfg.PollInterval.Seconds()
+	if !t.lastPoll.IsZero() {
+		elapsed = now.Sub(t.lastPoll).Seconds()
+	}
+	if elapsed <= 0 {
+		elapsed = 1
+	}
+
+	nextNSS := make(map[string]nssEntry)
+
+	for _, pp := range []string{"/sys/kernel/debug/ppe0/entries", "/sys/kernel/debug/ppe1/entries"} {
+		f, err := os.Open(pp)
+		if err != nil {
+			continue
+		}
+		entries, err := nss.Parse(f, t.lanPrefixes)
+		f.Close()
+		if err != nil {
+			continue
+		}
+
+		for _, e := range entries {
+			if e.Bytes == 0 {
+				continue
+			}
+			var hostIP string
+			if e.Direction == "upload" {
+				hostIP = e.SrcIP.String()
+			} else if e.Direction == "download" {
+				hostIP = e.DstIP.String()
+			} else {
+				continue
+			}
+
+			key := fmt.Sprintf("%s:%d->%s:%d", e.SrcIP, e.SrcPort, e.DstIP, e.DstPort)
+			prev, seen := t.nssPrev[key]
+			nssDelta := counterDelta(e.Bytes, prev.Bytes, seen)
+			nextNSS[key] = nssEntry{
+				Bytes:   e.Bytes,
+				Packets: e.Packets,
+				Seen:    true,
+			}
+
+			if nssDelta == 0 {
+				continue
+			}
+
+			t.mu.Lock()
+			host := t.hosts[hostIP]
+			host.IP = hostIP
+			if info, found := t.leases[host.IP]; found {
+				host.Hostname = info.Hostname
+				host.MAC = info.MAC
+			}
+			rate := float64(nssDelta) / elapsed
+
+			if e.Direction == "upload" {
+				host.Uploaded += nssDelta
+				host.UploadBPS += rate
+			} else {
+				host.Downloaded += nssDelta
+				host.DownloadBPS += rate
+			}
+			host.ActiveFlows++
+			host.LastSeen = now
+			t.hosts[hostIP] = host
+			t.mu.Unlock()
+		}
+	}
+
+	t.mu.Lock()
+	t.nssPrev = nextNSS
+	if len(nextNSS) > 0 {
+		t.health.NSSReadable = true
+	}
+	t.mu.Unlock()
 }
