@@ -1,0 +1,4 @@
+/dist/
+/tests/ui-output/
+/.tools/
+*.tmp

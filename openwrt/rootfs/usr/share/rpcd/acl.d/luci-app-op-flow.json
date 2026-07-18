@@ -1,0 +1,29 @@
+{
+	"luci-app-op-flow": {
+		"description": "Grant access to OP Flow Insight",
+		"read": {
+			"ubus": {
+				"op-flow": [
+					"dashboard",
+					"health",
+					"lookup"
+				]
+			},
+			"uci": [
+				"op-flow"
+			]
+		},
+		"write": {
+			"ubus": {
+				"op-flow": [
+					"update",
+					"reset"
+				]
+			},
+			"uci": [
+				"op-flow"
+			]
+		}
+	}
+}
+

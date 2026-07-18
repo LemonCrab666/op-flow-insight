@@ -1,0 +1,29 @@
+{
+	"admin/status/op-flow": {
+		"title": "流量洞察",
+		"order": 35,
+		"action": {
+			"type": "view",
+			"path": "status/op_flow"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-op-flow"
+			]
+		}
+	},
+	"admin/services/op-flow": {
+		"title": "流量洞察设置",
+		"order": 90,
+		"action": {
+			"type": "view",
+			"path": "op_flow/settings"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-op-flow"
+			]
+		}
+	}
+}
+

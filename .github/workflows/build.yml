@@ -1,0 +1,116 @@
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package-immortalwrt-25:
+    runs-on: ubuntu-latest
+    env:
+      IMMORTALWRT_VERSION: "25.12.0"
+      IMMORTALWRT_SDK: "immortalwrt-sdk-25.12.0-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
+      IMMORTALWRT_SDK_SHA256: "c228059aa1e58c3b3ae58ce8dcc7549fd08379d8e231daf80fcca15b677564cb"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Download verified ImmortalWrt 25.12.0 x86_64 SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bison build-essential clang flex g++ gawk gcc-multilib gettext \
+            libncurses-dev libssl-dev python3-setuptools rsync swig unzip \
+            zlib1g-dev zstd
+          curl -fL \
+            "https://downloads.immortalwrt.org/releases/${IMMORTALWRT_VERSION}/targets/x86/64/${IMMORTALWRT_SDK}" \
+            -o "/tmp/${IMMORTALWRT_SDK}"
+          echo "${IMMORTALWRT_SDK_SHA256}  /tmp/${IMMORTALWRT_SDK}" | sha256sum -c -
+          mkdir -p /tmp/immortalwrt-sdk
+          tar --zstd -xf "/tmp/${IMMORTALWRT_SDK}" \
+            -C /tmp/immortalwrt-sdk --strip-components=1
+      - name: Build native ImmortalWrt APK v3
+        run: bash ./scripts/build-apk.sh /tmp/immortalwrt-sdk
+      - name: Verify APK metadata
+        run: |
+          APK="$(find dist -maxdepth 1 -type f -name 'op-flow-insight-*.apk' | head -n 1)"
+          test -n "$APK"
+          test "$(dd if="$APK" bs=4 count=1 status=none)" = "ADBd"
+          /tmp/immortalwrt-sdk/staging_dir/host/bin/apk adbdump --format json "$APK" \
+            | tee "$APK.metadata.json"
+          grep -q '"op-flow-insight"' "$APK.metadata.json"
+          grep -q '"x86_64"' "$APK.metadata.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: op-flow-insight-immortalwrt-25.12.0-x86_64-apk
+          path: |
+            dist/*.apk
+            dist/*.metadata.json
+            dist/bin/op-flowd-linux-amd64
+          if-no-files-found: error
+
+  test-and-package-immortalwrt-24:
+    runs-on: ubuntu-latest
+    env:
+      IMMORTALWRT_VERSION: "24.10.6"
+      IMMORTALWRT_SDK: "immortalwrt-sdk-24.10.6-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
+      IMMORTALWRT_SDK_SHA256: "709bea2ce466b7ad671ce00fdcb1eb69b2b3fa0f0921b12b620725d95cd8c0e5"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Download verified ImmortalWrt 24.10.6 x86_64 SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bison build-essential clang flex g++ gawk gcc-multilib gettext \
+            libncurses-dev libssl-dev python3-setuptools rsync swig unzip \
+            zlib1g-dev zstd
+          curl -fL \
+            "https://downloads.immortalwrt.org/releases/${IMMORTALWRT_VERSION}/targets/x86/64/${IMMORTALWRT_SDK}" \
+            -o "/tmp/${IMMORTALWRT_SDK}"
+          echo "${IMMORTALWRT_SDK_SHA256}  /tmp/${IMMORTALWRT_SDK}" | sha256sum -c -
+          mkdir -p /tmp/immortalwrt-sdk
+          tar --zstd -xf "/tmp/${IMMORTALWRT_SDK}" \
+            -C /tmp/immortalwrt-sdk --strip-components=1
+      - name: Build native ImmortalWrt IPK
+        run: bash ./scripts/build-ipk.sh /tmp/immortalwrt-sdk
+      - name: Verify IPK metadata
+        run: |
+          IPK="$(find dist -maxdepth 1 -type f -name 'op-flow-insight_*.ipk' | head -n 1)"
+          test -n "$IPK"
+          test "$(tar -xOzf "$IPK" ./debian-binary)" = "2.0"
+          tar -xOzf "$IPK" ./control.tar.gz \
+            | tar -xzO ./control \
+            | tee "$IPK.control.txt"
+          grep -q '^Package: op-flow-insight$' "$IPK.control.txt"
+          grep -q '^Architecture: x86_64$' "$IPK.control.txt"
+          tar -xOzf "$IPK" ./data.tar.gz \
+            | tar -tz \
+            | grep -q './usr/sbin/op-flowd'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: op-flow-insight-immortalwrt-24.10.6-x86_64-ipk
+          path: |
+            dist/*.ipk
+            dist/*.control.txt
+            dist/bin/op-flowd-linux-amd64
+          if-no-files-found: error

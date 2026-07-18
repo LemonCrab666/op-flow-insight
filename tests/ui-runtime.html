@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>OP Flow Insight runtime regression</title>
+	<style>
+		:root { font-family: Arial, sans-serif; color: #172033; }
+		* { box-sizing: border-box; }
+		body { margin: 0; background: #f2f4f8; }
+		.test-topbar {
+			align-items: flex-start;
+			background: #5e72e4;
+			display: flex;
+			height: 90px;
+			justify-content: flex-end;
+			left: 240px;
+			padding: 1rem;
+			position: absolute;
+			right: 0;
+			top: 0;
+		}
+		.test-shell { min-height: 100vh; padding-left: 240px; }
+		.test-sidebar {
+			background: #fff;
+			border-right: 1px solid #d9dee8;
+			bottom: 0;
+			left: 0;
+			padding: 2rem 1rem;
+			position: fixed;
+			top: 0;
+			width: 240px;
+		}
+		.test-main { padding: 1.25rem; width: 100%; }
+		/* Deliberately imitate conflicting rules found across LuCI themes. */
+		h2, h3 {
+			background: #5e72e4;
+			height: 72px;
+			margin: -28px 0 18px;
+			padding: 28px 36px;
+			position: relative;
+			width: calc(100% + 72px);
+		}
+		section { float: left; width: 48%; }
+		svg, path { display: none; opacity: 0; stroke: transparent; }
+		table { background: white; display: block !important; width: auto !important; }
+		table th { background: #eef2f8; padding: 1.5rem 2rem; }
+		table td { color: #101828 !important; padding: 1.25rem 2rem; }
+		div > table > tbody > tr:nth-of-type(2n) { background: #fff !important; }
+		.table { display: flex !important; flex-direction: column; }
+		.cbi-map { margin-left: -2rem; position: absolute; width: 140%; }
+		body.test-dark { background: #1e1e1e; color: #ccc; }
+		body.test-dark .test-sidebar { background: #252526; border-color: #444; }
+		body.test-dark .test-main { background: #1e1e1e; }
+		@media (max-width: 760px) {
+			.test-shell { padding-left: 0; }
+			.test-sidebar { display: none; }
+			.test-topbar { left: 0; }
+			.test-main { padding: .75rem; }
+		}
+	</style>
+	<link rel="stylesheet" href="../openwrt/rootfs/www/luci-static/resources/op-flow.css">
+</head>
+<body>
+	<header class="test-topbar"><button>刷新</button></header>
+	<div class="test-shell">
+		<aside class="test-sidebar">ImmortalWrt<br><br>状态<br>流量洞察</aside>
+		<main class="test-main"><div id="mount"></div></main>
+	</div>
+	<script>
+		var query = new URLSearchParams(location.search);
+		if (query.get('dark') === '1') document.body.classList.add('test-dark');
+
+		var dashboardData = {
+			totals: {
+				download_bps: 7885291, upload_bps: 2726297,
+				downloaded: 2555505541, uploaded: 301721305088,
+				active_hosts: 8, active_flows: 500, highest_risk: 0
+			},
+			history: [
+				{ at: '2026-07-18T10:00:00Z', upload_bps: 1000000, download_bps: 3800000 },
+				{ at: '2026-07-18T10:00:05Z', upload_bps: 1250000, download_bps: 5200000 },
+				{ at: '2026-07-18T10:00:10Z', upload_bps: 1100000, download_bps: 4400000 },
+				{ at: '2026-07-18T10:00:15Z', upload_bps: 1800000, download_bps: 7600000 },
+				{ at: '2026-07-18T10:00:20Z', upload_bps: 1500000, download_bps: 6100000 },
+				{ at: '2026-07-18T10:00:25Z', upload_bps: 2726297, download_bps: 7885291 }
+			],
+			hosts: [
+				{ hostname: 'ASROCK-B550M-PRO4', ip: '10.64.0.68', mac: '00:0E:1E:62:BD:C2', download_bps: 7832862, upload_bps: 1342177, downloaded: 1026555904, uploaded: 335544320, active_flows: 32, max_risk: 0 },
+				{ hostname: 'konomitv', ip: '10.64.0.64', mac: 'BC:24:11:9A:93:C7', download_bps: 5632, upload_bps: 1300234, downloaded: 24431821, uploaded: 5025111736, active_flows: 4, max_risk: 0 },
+				{ hostname: 'gateway-test', ip: '10.64.0.5', mac: '00:11:22:33:44:55', download_bps: 1, upload_bps: 2, downloaded: 3, uploaded: 4, active_flows: 1, max_risk: 0 }
+			],
+			flows: [
+				{ host_ip: '10.64.0.68', direction: 'outbound', protocol: 'tcp', source: { ip: '10.64.0.68', port: 53000 }, destination: { ip: '1.1.1.1', port: 443 }, geo: { country_code: 'AU', asn: 13335, asn_org: 'Cloudflare' }, download_bps: 1048576, upload_bps: 524288, risk: { score: 0, evidence: [] } },
+				{ host_ip: '10.64.0.5', direction: 'outbound', protocol: 'udp', source: { ip: '10.64.0.5', port: 53001 }, destination: { ip: '8.8.8.8', port: 53 }, geo: { country_code: 'US', asn: 15169, asn_org: 'Google' }, download_bps: 1024, upload_bps: 2048, risk: { score: 0, evidence: [] } }
+			],
+			data: { loaded: true, updated_at: '2026-07-18T10:00:00Z', update_running: false },
+			health: { warnings: [] }
+		};
+
+		function append(parent, value) {
+			if (value === null || value === undefined || value === false) return;
+			if (Array.isArray(value)) {
+				value.forEach(function(item) { append(parent, item); });
+			} else if (value instanceof Node) {
+				parent.appendChild(value);
+			} else {
+				parent.appendChild(document.createTextNode(String(value)));
+			}
+		}
+
+		function E(name, attributes, children) {
+			if (!(attributes instanceof Object) || Array.isArray(attributes) || attributes instanceof Node) {
+				children = attributes;
+				attributes = {};
+			}
+			var node = document.createElement(name);
+			Object.keys(attributes || {}).forEach(function(key) {
+				var value = attributes[key];
+				if (value === null || value === undefined) return;
+				if (key === 'click' || key === 'keydown') node.addEventListener(key, value);
+				else node.setAttribute(key, String(value));
+			});
+			append(node, children);
+			return node;
+		}
+
+		var dom = {
+			content: function(node, value) {
+				while (node.firstChild) node.removeChild(node.firstChild);
+				append(node, value);
+			}
+		};
+		var rpc = {
+			declare: function() {
+				return function() { return Promise.resolve(dashboardData); };
+			}
+		};
+		var ui = {
+			createHandlerFn: function(context, handler) {
+				return function(event) { return handler.call(context, event); };
+			},
+			addNotification: function() {}
+		};
+		var view = { extend: function(definition) { return definition; } };
+		var L = {
+			resource: function(path) {
+				return '../openwrt/rootfs/www/luci-static/resources/' + path;
+			},
+			bind: function(fn, context) { return fn.bind(context); },
+			Poll: { add: function() {} }
+		};
+
+		function rect(selector) {
+			return document.querySelector(selector).getBoundingClientRect();
+		}
+		function inside(inner, outer, tolerance) {
+			tolerance = tolerance || 1;
+			return inner.left >= outer.left - tolerance && inner.right <= outer.right + tolerance &&
+				inner.top >= outer.top - tolerance && inner.bottom <= outer.bottom + tolerance;
+		}
+		function rgb(element) {
+			return getComputedStyle(element).color.replace(/\s+/g, '');
+		}
+		function textRect(element) {
+			var range = document.createRange();
+			range.selectNodeContents(element);
+			return range.getBoundingClientRect();
+		}
+
+		function layoutReport() {
+			if (document.getElementById('layout-report')) return;
+			var checks = [];
+			function add(name, pass, detail) {
+				checks.push({ name: name, pass: Boolean(pass), detail: detail || '' });
+			}
+			var root = rect('.ofi-root');
+			var main = rect('.test-main');
+			var topbar = rect('.test-topbar');
+			var header = rect('.ofi-header');
+			var title = rect('.ofi-header h2');
+			var actions = rect('.ofi-actions');
+			var stats = rect('.ofi-stats');
+			var panels = Array.from(document.querySelectorAll('.ofi-panel')).map(function(item) {
+				return item.getBoundingClientRect();
+			});
+			var cards = Array.from(document.querySelectorAll('.ofi-stat')).map(function(item) {
+				return item.getBoundingClientRect();
+			});
+			var columns = new Set(cards.map(function(item) { return Math.round(item.left); })).size;
+			var expectedColumns = root.width <= 360 ? 1 : root.width <= 650 ? 2 : root.width <= 1050 ? 3 : 6;
+			var svg = document.querySelector('.ofi-chart');
+			var paths = Array.from(document.querySelectorAll('.ofi-chart path'));
+			var tabs = Array.from(document.querySelectorAll('.ofi-tab'));
+			var yLabels = Array.from(document.querySelectorAll('.ofi-y-scale span'));
+			var xLabels = Array.from(document.querySelectorAll('.ofi-x-scale span'));
+			var expectedDown = document.body.classList.contains('test-dark') ? 'rgb(100,164,255)' : 'rgb(22,119,255)';
+			var expectedUp = document.body.classList.contains('test-dark') ? 'rgb(69,211,160)' : 'rgb(0,168,120)';
+
+			add('root stays in content', inside(root, main, 2));
+			add('plugin header clears theme topbar', header.top >= topbar.bottom + 10, header.top + '/' + topbar.bottom);
+			add('title stays in plugin header', inside(title, header, 2));
+			add('actions stay in plugin header', inside(actions, header, 2));
+			add('header precedes stats', header.bottom <= stats.top + 1);
+			add('responsive stat columns', columns === expectedColumns, columns + '/' + expectedColumns);
+			add('panels use full row', panels.every(function(panel) { return Math.abs(panel.width - root.width) <= 2; }));
+			add('panels are vertically ordered', panels.every(function(panel, index) {
+				return index === 0 || panels[index - 1].bottom <= panel.top + 1;
+			}));
+			add('SVG uses correct namespace', svg instanceof SVGSVGElement &&
+				paths.length === 3 && paths.every(function(path) { return path instanceof SVGPathElement; }));
+			add('SVG paths have geometry', paths.slice(1).every(function(path) { return path.getTotalLength() > 0; }));
+			add('download chart line visible', getComputedStyle(paths[1]).stroke !== 'none' &&
+				getComputedStyle(paths[1]).visibility === 'visible');
+			add('upload chart line visible', getComputedStyle(paths[2]).stroke !== 'none' &&
+				getComputedStyle(paths[2]).visibility === 'visible');
+			add('chart axes expose time and rate units',
+				document.querySelector('.ofi-axis-title-y').textContent === '速率' &&
+				document.querySelector('.ofi-axis-title-x').textContent === '时间' &&
+				yLabels.length === 3 && yLabels.every(function(item) { return /\/s$/.test(item.textContent); }) &&
+				xLabels.length === 3 && xLabels.every(function(item) { return /\d{2}:\d{2}/.test(item.textContent); }));
+			add('Bandix-style tabs are contained', tabs.length === 3 &&
+				tabs.every(function(tab) { return inside(tab.getBoundingClientRect(), rect('.ofi-tabs'), 2); }));
+			add('download stat stays blue',
+				rgb(document.querySelector('.ofi-stat-down .ofi-stat-value')).toLowerCase() === expectedDown);
+			add('upload stat stays green',
+				rgb(document.querySelector('.ofi-stat-up .ofi-stat-value')).toLowerCase() === expectedUp);
+
+			tabs[1].click();
+			var hostRows = Array.from(document.querySelectorAll('.ofi-host-row'));
+			var hostIPs = hostRows.map(function(row) { return row.dataset.host; });
+			add('hosts use stable numeric IP order',
+				hostIPs.join(',') === '10.64.0.5,10.64.0.64,10.64.0.68', hostIPs.join(','));
+			add('download host text stays blue',
+				rgb(document.querySelector('.ofi-host-table td.ofi-down')).toLowerCase() === expectedDown);
+			add('upload host text stays green',
+				rgb(document.querySelector('.ofi-host-table td.ofi-up')).toLowerCase() === expectedUp);
+			var hostHeaders = Array.from(document.querySelectorAll('.ofi-host-table thead th'));
+			var hostCells = Array.from(document.querySelectorAll('.ofi-host-table tbody tr:first-child td'));
+			add('host numeric headers align with data', hostHeaders.slice(1).every(function(header, index) {
+				var cell = hostCells[index + 1];
+				return getComputedStyle(header).textAlign === 'right' &&
+					getComputedStyle(cell).textAlign === 'right' &&
+					Math.abs(textRect(header).right - textRect(cell).right) <= 3;
+			}));
+			add('host rows advertise connection drill-down',
+				hostRows.every(function(row) { return row.tabIndex === 0 && /当前连接/.test(row.title); }));
+			add('table viewport is contained', Array.from(document.querySelectorAll('.ofi-table-scroll')).every(function(item) {
+				return item.getBoundingClientRect().right <= root.right + 2;
+			}));
+
+			hostRows[0].click();
+			var detailPanel = document.querySelector('[data-ofi-panel="connections"]');
+			var detailFlows = Array.from(document.querySelectorAll('.ofi-flow-table tbody tr[data-host]'));
+			add('host click opens its connection detail',
+				Boolean(detailPanel) && /10\.64\.0\.5/.test(detailPanel.textContent) &&
+				detailFlows.length === 1 && detailFlows[0].dataset.host === '10.64.0.5');
+			add('selected host survives live data refresh', (function() {
+				var updated = JSON.parse(JSON.stringify(dashboardData));
+				updated.hosts.reverse();
+				updated.hosts[0].download_bps = 999999999;
+				window.testModule.renderData(updated);
+				var panel = document.querySelector('[data-ofi-panel="connections"]');
+				return Boolean(panel) && /10\.64\.0\.5/.test(panel.textContent) &&
+					document.querySelector('.ofi-tab-active').textContent.indexOf('当前连接') >= 0;
+			})());
+
+			tabs = Array.from(document.querySelectorAll('.ofi-tab'));
+			tabs[1].click();
+			hostRows = Array.from(document.querySelectorAll('.ofi-host-row'));
+			add('IP order does not change with traffic',
+				hostRows.map(function(row) { return row.dataset.host; }).join(',') ===
+				'10.64.0.5,10.64.0.64,10.64.0.68');
+			tabs = Array.from(document.querySelectorAll('.ofi-tab'));
+			tabs[0].click();
+			add('document has no page overflow', document.documentElement.scrollWidth <= document.documentElement.clientWidth + 2,
+				document.documentElement.scrollWidth + '/' + document.documentElement.clientWidth);
+
+			var passed = checks.every(function(check) { return check.pass; });
+			document.body.dataset.layout = passed ? 'pass' : 'fail';
+			var output = document.createElement('pre');
+			output.id = 'layout-report';
+			output.hidden = true;
+			output.textContent = JSON.stringify({
+				passed: passed,
+				viewport: [ window.innerWidth, window.innerHeight ],
+				rootWidth: Math.round(root.width),
+				checks: checks
+			});
+			document.body.appendChild(output);
+		}
+
+		function start() {
+			var request = new XMLHttpRequest();
+			request.open('GET', '../openwrt/rootfs/www/luci-static/resources/view/status/op_flow.js', false);
+			request.send(null);
+			if (request.status < 200 || request.status >= 300)
+				throw new Error('Failed to load op_flow.js: HTTP ' + request.status);
+			var source = request.responseText;
+			var factory = new Function('view', 'rpc', 'dom', 'ui', 'L', 'E', source);
+			var module = factory(view, rpc, dom, ui, L, E);
+			window.testModule = module;
+			document.getElementById('mount').appendChild(module.render(dashboardData));
+			requestAnimationFrame(layoutReport);
+			setTimeout(layoutReport, 100);
+		}
+
+		try {
+			start();
+		} catch (error) {
+			var output = document.createElement('pre');
+			output.id = 'layout-report';
+			output.hidden = true;
+			output.textContent = JSON.stringify({ passed: false, error: error.stack || String(error) });
+			document.body.appendChild(output);
+		}
+	</script>
+</body>
+</html>

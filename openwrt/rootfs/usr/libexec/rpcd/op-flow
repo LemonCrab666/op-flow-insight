@@ -1,0 +1,40 @@
+#!/bin/sh
+
+CONFIG=/etc/config/op-flow
+DAEMON=/usr/sbin/op-flowd
+
+case "$1" in
+	list)
+		printf '%s\n' '{
+			"dashboard": {},
+			"health": {},
+			"lookup": { "ip": "String" },
+			"update": {},
+			"reset": {}
+		}'
+		;;
+	call)
+		case "$2" in
+			dashboard|health|update|reset)
+				exec "$DAEMON" -config "$CONFIG" ctl "$2"
+				;;
+			lookup)
+				input="$(cat)"
+				ip="$(printf '%s' "$input" | jsonfilter -e '@.ip')"
+				[ -n "$ip" ] || {
+					printf '%s\n' '{"error":"missing ip"}'
+					exit 1
+				}
+				exec "$DAEMON" -config "$CONFIG" ctl lookup "$ip"
+				;;
+			*)
+				printf '%s\n' '{"error":"unknown method"}'
+				exit 1
+				;;
+		esac
+		;;
+	*)
+		exit 1
+		;;
+esac
+

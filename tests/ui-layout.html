@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>OP Flow Insight layout regression</title>
+	<style>
+		:root { font-family: Arial, sans-serif; color: #172033; }
+		* { box-sizing: border-box; }
+		body { margin: 0; background: #f2f4f8; }
+		.test-shell { min-height: 100vh; padding-left: 240px; }
+		.test-sidebar {
+			background: #fff;
+			border-right: 1px solid #d9dee8;
+			bottom: 0;
+			left: 0;
+			padding: 2rem 1rem;
+			position: fixed;
+			top: 0;
+			width: 240px;
+		}
+		.test-main { padding: 1.25rem; width: 100%; }
+		/* Deliberately imitate conflicting rules found across LuCI themes. */
+		h2, h3 {
+			background: #5e72e4;
+			height: 72px;
+			margin: -28px 0 18px;
+			padding: 28px 36px;
+			position: relative;
+			width: calc(100% + 72px);
+		}
+		section { float: left; width: 48%; }
+		table { background: white; display: block !important; width: auto !important; }
+		table th { background: #eef2f8; padding: 1.5rem 2rem; }
+		table td { padding: 1.25rem 2rem; }
+		div > table > tbody > tr:nth-of-type(2n) { background: #fff !important; }
+		.table { display: flex !important; flex-direction: column; }
+		.cbi-map { margin-left: -2rem; position: absolute; width: 140%; }
+		body.test-dark { background: #1e1e1e; color: #ccc; }
+		body.test-dark .test-sidebar { background: #252526; border-color: #444; }
+		body.test-dark .test-main { background: #1e1e1e; }
+		@media (max-width: 760px) {
+			.test-shell { padding-left: 0; }
+			.test-sidebar { display: none; }
+			.test-main { padding: .75rem; }
+		}
+	</style>
+	<link rel="stylesheet" href="../openwrt/rootfs/www/luci-static/resources/op-flow.css">
+</head>
+<body>
+	<div class="test-shell">
+		<aside class="test-sidebar">ImmortalWrt<br><br>状态<br>流量洞察</aside>
+		<main class="test-main">
+			<div id="fixture" class="ofi-root">
+				<div class="ofi-header">
+					<div>
+						<h2>流量洞察</h2>
+						<p class="ofi-lead">内网主机累计用量、实时连接与离线 IP 风险证据</p>
+					</div>
+					<div class="ofi-actions">
+						<span class="ofi-live"><span class="ofi-live-dot"></span>每 2 秒刷新</span>
+						<button class="btn">更新数据集</button>
+					</div>
+				</div>
+				<div class="ofi-stats">
+					<div class="ofi-stat ofi-stat-down"><div class="ofi-stat-label">当前下载</div><div class="ofi-stat-value">23.5 KiB/s</div></div>
+					<div class="ofi-stat ofi-stat-up"><div class="ofi-stat-label">当前上传</div><div class="ofi-stat-value">1.54 MiB/s</div></div>
+					<div class="ofi-stat"><div class="ofi-stat-label">累计下载</div><div class="ofi-stat-value">1.98 GiB</div></div>
+					<div class="ofi-stat"><div class="ofi-stat-label">累计上传</div><div class="ofi-stat-value">229 GiB</div></div>
+					<div class="ofi-stat"><div class="ofi-stat-label">活动主机 / 连接</div><div class="ofi-stat-value">9 / 456</div></div>
+					<div class="ofi-stat ofi-stat-low"><div class="ofi-stat-label">当前最高风险</div><div class="ofi-stat-value">0</div></div>
+				</div>
+				<section class="ofi-panel">
+					<div class="ofi-panel-title"><h3>实时带宽趋势</h3><span class="ofi-subtle">最近约 10 分钟</span></div>
+					<div class="ofi-chart-wrap">
+						<svg class="ofi-chart" viewBox="0 0 100 40" preserveAspectRatio="none">
+							<path class="ofi-grid" d="M0,38 L100,38 M0,20 L100,20 M0,2 L100,2"></path>
+							<path class="ofi-line ofi-line-down" d="M0,34 L20,26 L40,31 L60,13 L80,20 L100,6"></path>
+							<path class="ofi-line ofi-line-up" d="M0,37 L20,35 L40,34 L60,30 L80,31 L100,27"></path>
+						</svg>
+					</div>
+				</section>
+				<section class="ofi-panel">
+					<div class="ofi-panel-title"><h3>内网主机</h3><span class="ofi-subtle">9 台已记录</span></div>
+					<div class="ofi-table-scroll">
+						<table class="ofi-table ofi-host-table">
+							<thead><tr><th>主机</th><th>实时下载</th><th>实时上传</th><th>累计下载</th><th>累计上传</th><th>连接</th><th>风险</th></tr></thead>
+							<tbody>
+								<tr><td><strong>Kyonma-C</strong><div class="ofi-mono ofi-subtle">10.65.0.4</div></td><td class="ofi-num ofi-down">9.29 KiB/s</td><td class="ofi-num ofi-up">10.9 KiB/s</td><td class="ofi-num">278 MiB</td><td class="ofi-num">1.12 GiB</td><td class="ofi-num">179</td><td class="ofi-num"><span class="ofi-risk ofi-risk-low">0</span></td></tr>
+								<tr><td><strong>Kyonma-S</strong><div class="ofi-mono ofi-subtle">10.65.0.2</div></td><td class="ofi-num ofi-down">3.55 KiB/s</td><td class="ofi-num ofi-up">4.43 KiB/s</td><td class="ofi-num">199 MiB</td><td class="ofi-num">292 MiB</td><td class="ofi-num">122</td><td class="ofi-num"><span class="ofi-risk ofi-risk-low">0</span></td></tr>
+								<tr><td><strong>FortiGate-60F</strong><div class="ofi-mono ofi-subtle">10.64.0.10</div></td><td class="ofi-num ofi-down">320 B/s</td><td class="ofi-num ofi-up">640 B/s</td><td class="ofi-num">268 MiB</td><td class="ofi-num">273 MiB</td><td class="ofi-num">62</td><td class="ofi-num"><span class="ofi-risk ofi-risk-low">0</span></td></tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+	<script>
+		var query = new URLSearchParams(location.search);
+		if (query.get('dark') === '1') {
+			document.body.classList.add('test-dark');
+			document.getElementById('fixture').classList.add('ofi-dark');
+		}
+
+		function layoutReport() {
+			var checks = [];
+			function add(name, pass, detail) {
+				checks.push({ name: name, pass: Boolean(pass), detail: detail || '' });
+			}
+			function rect(selector) {
+				return document.querySelector(selector).getBoundingClientRect();
+			}
+			function inside(inner, outer, tolerance) {
+				tolerance = tolerance || 1;
+				return inner.left >= outer.left - tolerance &&
+					inner.right <= outer.right + tolerance &&
+					inner.top >= outer.top - tolerance &&
+					inner.bottom <= outer.bottom + tolerance;
+			}
+
+			var root = rect('.ofi-root');
+			var main = rect('.test-main');
+			var header = rect('.ofi-header');
+			var title = rect('.ofi-header h2');
+			var actions = rect('.ofi-actions');
+			var stats = rect('.ofi-stats');
+			var panels = Array.from(document.querySelectorAll('.ofi-panel')).map(function(item) {
+				return item.getBoundingClientRect();
+			});
+			var cards = Array.from(document.querySelectorAll('.ofi-stat')).map(function(item) {
+				return item.getBoundingClientRect();
+			});
+			var columns = new Set(cards.map(function(item) { return Math.round(item.left); })).size;
+			var expectedColumns = root.width <= 360 ? 1 : root.width <= 650 ? 2 : root.width <= 1050 ? 3 : 6;
+			var cardsOverlap = cards.some(function(a, index) {
+				return cards.slice(index + 1).some(function(b) {
+					return Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
+						Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+				});
+			});
+
+			add('root stays in content', inside(root, main, 2), JSON.stringify({ root: root.width, main: main.width }));
+			add('title stays in header', inside(title, header, 2));
+			add('actions stay in header', inside(actions, header, 2));
+			add('header precedes stats', header.bottom <= stats.top + 1);
+			add('responsive stat columns', columns === expectedColumns, columns + '/' + expectedColumns);
+			add('stat cards do not overlap', !cardsOverlap);
+			add('panels use full row', panels.every(function(panel) {
+				return Math.abs(panel.width - root.width) <= 2;
+			}));
+			add('panels are vertically ordered', panels[0].bottom <= panels[1].top + 1);
+			add('table viewport is contained', inside(rect('.ofi-table-scroll'), panels[1], 2));
+			add('theme table display overridden', getComputedStyle(document.querySelector('.ofi-table')).display === 'table');
+			add('theme heading position overridden', getComputedStyle(document.querySelector('.ofi-header h2')).position === 'static');
+			add('theme section float overridden', getComputedStyle(document.querySelector('.ofi-panel')).float === 'none');
+			add('document has no page overflow', document.documentElement.scrollWidth <= document.documentElement.clientWidth + 2,
+				document.documentElement.scrollWidth + '/' + document.documentElement.clientWidth);
+
+			var passed = checks.every(function(check) { return check.pass; });
+			document.body.dataset.layout = passed ? 'pass' : 'fail';
+			var output = document.createElement('pre');
+			output.id = 'layout-report';
+			output.hidden = true;
+			output.textContent = JSON.stringify({
+				passed: passed,
+				viewport: [ window.innerWidth, window.innerHeight ],
+				rootWidth: Math.round(root.width),
+				checks: checks
+			});
+			document.body.appendChild(output);
+		}
+
+		requestAnimationFrame(function() {
+			requestAnimationFrame(layoutReport);
+		});
+	</script>
+</body>
+</html>
